@@ -1,15 +1,16 @@
 /**
- * Landing page scaffold: hero + features + pricing + footer.
+ * Landing page scaffold: welcome + pricing + footer.
  */
+
+import { welcomeJs } from './shared.js';
 
 export function landingFiles(opts) {
   return [
     ['src/app.js', appJs(opts)],
-    ['src/sections/hero.js', heroJs()],
-    ['src/sections/features.js', featuresJs()],
+    ['src/sections/welcome.js', welcomeJs(opts)],
     ['src/sections/pricing.js', pricingJs()],
-    ['src/sections/footer.js', footerJs()],
-    ['test/hero.test.js', heroTestJs()]
+    ['src/sections/footer.js', footerJs(opts)],
+    ['test/welcome.test.js', welcomeTestJs(opts)]
   ];
 }
 
@@ -17,8 +18,7 @@ function appJs(opts) {
   return `import { h, mount } from 'decantr/core';
 import { setTheme } from 'decantr/css';
 import { setStyle } from 'decantr/css';
-import { Hero } from './sections/hero.js';
-import { Features } from './sections/features.js';
+import { Welcome } from './sections/welcome.js';
 import { Pricing } from './sections/pricing.js';
 import { Footer } from './sections/footer.js';
 
@@ -27,83 +27,13 @@ setStyle('${opts.style}');
 
 function App() {
   return h('div', null,
-    Hero(),
-    Features(),
+    Welcome(),
     Pricing(),
     Footer()
   );
 }
 
 mount(document.getElementById('app'), App);
-`;
-}
-
-function heroJs() {
-  return `import { h } from 'decantr/core';
-import { Button } from 'decantr/components';
-
-export function Hero() {
-  return h('section', {
-    style: {
-      padding: '6rem 2rem', textAlign: 'center', background: 'var(--c2)',
-      borderBottom: '1px solid var(--c5)'
-    }
-  },
-    h('div', { style: { maxWidth: '680px', margin: '0 auto' } },
-      h('h1', { style: { fontSize: '3rem', fontWeight: '800', lineHeight: '1.1', marginBottom: '1.5rem' } },
-        'Build something ',
-        h('span', { style: { color: 'var(--c1)' } }, 'extraordinary')
-      ),
-      h('p', { style: { fontSize: '1.25rem', color: 'var(--c4)', lineHeight: '1.6', marginBottom: '2rem' } },
-        'The modern platform for teams who ship fast. Zero friction, infinite possibilities.'
-      ),
-      h('div', { style: { display: 'flex', gap: '1rem', justifyContent: 'center', flexWrap: 'wrap' } },
-        Button({ variant: 'primary', size: 'lg' }, 'Get Started'),
-        Button({ size: 'lg' }, 'Learn More')
-      )
-    )
-  );
-}
-`;
-}
-
-function featuresJs() {
-  return `import { h } from 'decantr/core';
-import { Card } from 'decantr/components';
-
-const features = [
-  { title: 'Lightning Fast', desc: 'Sub-millisecond rendering with signal-based reactivity. No virtual DOM overhead.' },
-  { title: 'Zero Dependencies', desc: 'Pure JavaScript, CSS, and HTML. Nothing to install, nothing to break.' },
-  { title: 'AI-Native', desc: 'Designed for AI agents to read, generate, and maintain. Machine-readable manifests.' },
-  { title: 'Tiny Bundle', desc: 'Under 2KB gzipped for a hello world. Your users will thank you.' },
-  { title: 'Beautiful Defaults', desc: '7 themes and 7 design styles. Pick your aesthetic, switch at runtime.' },
-  { title: 'Built-in Testing', desc: 'Test runner with DOM helpers. No config, no setup, just write tests.' }
-];
-
-export function Features() {
-  return h('section', {
-    style: { padding: '5rem 2rem' }
-  },
-    h('div', { style: { maxWidth: '1080px', margin: '0 auto' } },
-      h('h2', { style: { fontSize: '2rem', fontWeight: '700', textAlign: 'center', marginBottom: '3rem' } },
-        'Everything you need'
-      ),
-      h('div', {
-        style: {
-          display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))',
-          gap: '1.5rem'
-        }
-      },
-        ...features.map(f =>
-          Card({ hoverable: true },
-            h('h3', { style: { fontSize: '1.125rem', fontWeight: '600', marginBottom: '0.5rem' } }, f.title),
-            h('p', { style: { color: 'var(--c4)', lineHeight: '1.6' } }, f.desc)
-          )
-        )
-      )
-    )
-  );
-}
 `;
 }
 
@@ -158,7 +88,7 @@ export function Pricing() {
 `;
 }
 
-function footerJs() {
+function footerJs(opts) {
   return `import { h } from 'decantr/core';
 
 const links = {
@@ -179,8 +109,8 @@ export function Footer() {
       }
     },
       h('div', null,
-        h('p', { style: { fontWeight: '700', color: 'var(--c1)', marginBottom: '0.5rem' } }, 'decantr'),
-        h('p', { style: { color: 'var(--c4)', fontSize: '0.875rem' } }, 'AI-first web framework.')
+        h('p', { style: { fontWeight: '700', color: 'var(--c1)', marginBottom: '0.5rem' } }, '${opts.name}'),
+        h('p', { style: { color: 'var(--c4)', fontSize: '0.875rem' } }, 'Built with decantr.')
       ),
       ...Object.entries(links).map(([category, items]) =>
         h('div', null,
@@ -199,20 +129,25 @@ export function Footer() {
 `;
 }
 
-function heroTestJs() {
+function welcomeTestJs(opts) {
   return `import { describe, it, assert, render } from 'decantr/test';
-import { Hero } from '../src/sections/hero.js';
+import { Welcome } from '../src/sections/welcome.js';
 
-describe('Hero', () => {
-  it('renders headline', () => {
-    const { container } = render(() => Hero());
-    assert.ok(container.textContent.includes('extraordinary'));
+describe('Welcome', () => {
+  it('renders project name', () => {
+    const { container } = render(() => Welcome());
+    assert.ok(container.textContent.includes('${opts.name}'));
   });
 
-  it('renders CTA buttons', () => {
-    const { container } = render(() => Hero());
+  it('renders Get Started button', () => {
+    const { container } = render(() => Welcome());
     assert.ok(container.textContent.includes('Get Started'));
-    assert.ok(container.textContent.includes('Learn More'));
+  });
+
+  it('renders feature cards', () => {
+    const { container } = render(() => Welcome());
+    assert.ok(container.textContent.includes('Lightning Fast'));
+    assert.ok(container.textContent.includes('Zero Dependencies'));
   });
 });
 `;

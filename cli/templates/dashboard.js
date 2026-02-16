@@ -1,13 +1,16 @@
 /**
- * Dashboard scaffold: sidebar + header + pages (Overview, Data, Settings).
+ * Dashboard scaffold: sidebar + header + pages (Welcome, Overview, Data, Settings).
  */
+
+import { welcomeJs } from './shared.js';
 
 export function dashboardFiles(opts) {
   return [
     ['src/app.js', appJs(opts)],
-    ['src/components/sidebar.js', sidebarJs()],
+    ['src/components/sidebar.js', sidebarJs(opts)],
     ['src/components/header.js', headerJs()],
     ['src/components/stats-card.js', statsCardJs()],
+    ['src/pages/welcome.js', welcomeJs(opts)],
     ['src/pages/overview.js', overviewJs()],
     ['src/pages/data.js', dataJs()],
     ['src/pages/settings.js', settingsJs()],
@@ -20,6 +23,7 @@ function appJs(opts) {
 import { createRouter } from 'decantr/router';
 import { setTheme } from 'decantr/css';
 import { setStyle } from 'decantr/css';
+import { Welcome } from './pages/welcome.js';
 import { Overview } from './pages/overview.js';
 import { DataPage } from './pages/data.js';
 import { Settings } from './pages/settings.js';
@@ -32,7 +36,8 @@ setStyle('${opts.style}');
 const router = createRouter({
   mode: '${opts.router}',
   routes: [
-    { path: '/', component: Overview },
+    { path: '/', component: Welcome },
+    { path: '/overview', component: Overview },
     { path: '/data', component: DataPage },
     { path: '/settings', component: Settings }
   ]
@@ -54,7 +59,7 @@ mount(document.getElementById('app'), App);
 `;
 }
 
-function sidebarJs() {
+function sidebarJs(opts) {
   return `import { h } from 'decantr/core';
 import { createSignal } from 'decantr/state';
 import { link } from 'decantr/router';
@@ -64,7 +69,8 @@ export function Sidebar({ router }) {
   const [collapsed, setCollapsed] = createSignal(false);
 
   const navItems = [
-    { href: '/', label: 'Overview' },
+    { href: '/', label: 'Welcome' },
+    { href: '/overview', label: 'Overview' },
     { href: '/data', label: 'Data' },
     { href: '/settings', label: 'Settings' }
   ];
@@ -76,7 +82,7 @@ export function Sidebar({ router }) {
       flexShrink: '0'
     }
   },
-    h('div', { style: { padding: '1.25rem', fontWeight: '700', fontSize: '1.125rem', color: 'var(--c1)' } }, 'decantr'),
+    h('div', { style: { padding: '1.25rem', fontWeight: '700', fontSize: '1.125rem', color: 'var(--c1)' } }, '${opts.name}'),
     h('nav', { style: { flex: '1', padding: '0.5rem' } },
       ...navItems.map(item =>
         link({

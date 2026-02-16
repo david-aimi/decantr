@@ -2,9 +2,12 @@
  * Demo mode scaffold: multi-page showcase of all themes, styles, and components.
  */
 
+import { welcomeJs } from './shared.js';
+
 export function demoFiles(opts) {
   return [
     ['src/app.js', appJs(opts)],
+    ['src/pages/welcome.js', welcomeJs(opts)],
     ['src/pages/home.js', homeJs()],
     ['src/pages/buttons.js', buttonsJs()],
     ['src/pages/inputs.js', inputsJs()],
@@ -19,6 +22,7 @@ function appJs(opts) {
 import { createRouter, link } from 'decantr/router';
 import { setTheme } from 'decantr/css';
 import { setStyle } from 'decantr/css';
+import { Welcome } from './pages/welcome.js';
 import { Home } from './pages/home.js';
 import { ButtonsPage } from './pages/buttons.js';
 import { InputsPage } from './pages/inputs.js';
@@ -32,7 +36,8 @@ setStyle('${opts.style}');
 const router = createRouter({
   mode: '${opts.router}',
   routes: [
-    { path: '/', component: Home },
+    { path: '/', component: Welcome },
+    { path: '/home', component: Home },
     { path: '/buttons', component: ButtonsPage },
     { path: '/inputs', component: InputsPage },
     { path: '/cards', component: CardsPage },
@@ -42,7 +47,8 @@ const router = createRouter({
 });
 
 const navItems = [
-  { href: '/', label: 'Home' },
+  { href: '/', label: 'Welcome' },
+  { href: '/home', label: 'Showcase' },
   { href: '/buttons', label: 'Buttons' },
   { href: '/inputs', label: 'Inputs' },
   { href: '/cards', label: 'Cards' },
@@ -58,7 +64,7 @@ function App() {
         borderBottom: '1px solid var(--c5)', flexWrap: 'wrap', alignItems: 'center'
       }
     },
-      h('span', { style: { fontWeight: '700', color: 'var(--c1)', marginRight: '1rem' } }, 'decantr demo'),
+      h('span', { style: { fontWeight: '700', color: 'var(--c1)', marginRight: '1rem' } }, '${opts.name}'),
       ...navItems.map(item =>
         link({
           href: item.href,

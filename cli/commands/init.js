@@ -3,7 +3,7 @@ import { stdin, stdout } from 'node:process';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { join, basename } from 'node:path';
 import { welcome, success, info, heading } from '../art.js';
-import { packageJson, configJson, indexHtml, manifest } from '../templates/shared.js';
+import { packageJson, configJson, indexHtml, manifest, claudeMd } from '../templates/shared.js';
 import { dashboardFiles } from '../templates/dashboard.js';
 import { landingFiles } from '../templates/landing.js';
 import { demoFiles } from '../templates/demo.js';
@@ -13,15 +13,81 @@ async function ask(rl, question, defaultVal) {
   return answer.trim() || defaultVal;
 }
 
+function renderOptions(options, selected) {
+  return options.map((opt, i) => {
+    const active = i === selected;
+    const marker = active ? '\x1b[36m>\x1b[0m' : ' ';
+    const label = active ? `\x1b[1m${opt.label}\x1b[0m` : opt.label;
+    const desc = opt.desc ? ` \x1b[2m— ${opt.desc}\x1b[0m` : '';
+    return `  ${marker} ${i + 1}) ${label}${desc}`;
+  }).join('\n');
+}
+
 async function askChoice(rl, question, options, defaultIdx = 0) {
   console.log(heading(question));
-  options.forEach((opt, i) => {
-    const marker = i === defaultIdx ? '\x1b[36m>' : ' ';
-    console.log(`  ${marker} ${i + 1}) ${opt.label}${opt.desc ? ` \x1b[2m— ${opt.desc}\x1b[0m` : ''}\x1b[0m`);
+
+  // Fallback for non-TTY (piped input)
+  if (!stdin.isTTY) {
+    options.forEach((opt, i) => {
+      const marker = i === defaultIdx ? '\x1b[36m>' : ' ';
+      console.log(`  ${marker} ${i + 1}) ${opt.label}${opt.desc ? ` \x1b[2m— ${opt.desc}\x1b[0m` : ''}\x1b[0m`);
+    });
+    const answer = await rl.question(`  Choose [${defaultIdx + 1}]: `);
+    const idx = parseInt(answer.trim()) - 1;
+    return (idx >= 0 && idx < options.length) ? options[idx].value : options[defaultIdx].value;
+  }
+
+  return new Promise((resolve) => {
+    let selected = defaultIdx;
+
+    stdout.write(renderOptions(options, selected));
+
+    rl.pause();
+    stdin.setRawMode(true);
+    stdin.resume();
+
+    function done(value) {
+      stdin.setRawMode(false);
+      stdin.removeListener('data', onData);
+      rl.resume();
+      resolve(value);
+    }
+
+    function onData(buf) {
+      const key = buf.toString();
+
+      if (key === '\x03') { // Ctrl+C
+        stdin.setRawMode(false);
+        stdin.removeListener('data', onData);
+        process.exit(0);
+      }
+
+      if (key === '\x1b[A') { // Up arrow
+        selected = (selected - 1 + options.length) % options.length;
+      } else if (key === '\x1b[B') { // Down arrow
+        selected = (selected + 1) % options.length;
+      } else if (key === '\r' || key === '\n') { // Enter
+        stdout.write('\n');
+        return done(options[selected].value);
+      } else if (key >= '1' && key <= '9') { // Number shortcut
+        const idx = parseInt(key) - 1;
+        if (idx < options.length) {
+          selected = idx;
+          stdout.write(`\x1b[${options.length}A\x1b[J`);
+          stdout.write(renderOptions(options, selected) + '\n');
+          return done(options[selected].value);
+        }
+      } else {
+        return;
+      }
+
+      // Re-render list in place
+      stdout.write(`\x1b[${options.length}A\x1b[J`);
+      stdout.write(renderOptions(options, selected));
+    }
+
+    stdin.on('data', onData);
   });
-  const answer = await rl.question(`  Choose [${defaultIdx + 1}]: `);
-  const idx = parseInt(answer.trim()) - 1;
-  return (idx >= 0 && idx < options.length) ? options[idx].value : options[defaultIdx].value;
 }
 
 export async function run() {
@@ -105,7 +171,8 @@ export async function run() {
       ['package.json', packageJson(name)],
       ['decantr.config.json', configJson(opts)],
       ['public/index.html', indexHtml(opts)],
-      ['.decantr/manifest.json', manifest(opts)]
+      ['.decantr/manifest.json', manifest(opts)],
+      ['CLAUDE.md', claudeMd(opts)]
     ];
 
     // Project-type files
@@ -133,5 +200,6 @@ export async function run() {
 
   } finally {
     rl.close();
+    stdin.unref();
   }
 }

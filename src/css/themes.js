@@ -1,6 +1,15 @@
 import { createSignal } from '../state/index.js';
 
-/** @type {Map<string, {id:string, name:string, colors:Object, meta:Object}>} */
+/**
+ * Color variable semantics (consistent across all themes):
+ *   --c0: background       --c5: border
+ *   --c1: primary          --c6: primary-hover
+ *   --c2: surface          --c7: success
+ *   --c3: foreground       --c8: warning
+ *   --c4: muted            --c9: destructive
+ *
+ * @type {Map<string, {id:string, name:string, colors:Object, meta:Object}>}
+ */
 const themes = new Map();
 const [_getTheme, _setTheme] = createSignal('light');
 
