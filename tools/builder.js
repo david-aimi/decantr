@@ -82,11 +82,31 @@ function bundle(modules, entrypoint) {
     moduleIds.set(path, `_m${idCounter++}`);
   }
 
+  // Reverse module order so dependencies are defined before dependents
+  const moduleList = [...modules.entries()].reverse();
+
   let output = '(function(){\n';
 
-  for (const [path, source] of modules) {
+  for (const [path, source] of moduleList) {
     const id = moduleIds.get(path);
     let processed = source;
+
+    // Rewrite re-exports: export { X, Y } from 'module' → const { X, Y } = _mN;
+    processed = processed.replace(
+      /export\s*\{([^}]+)\}\s*from\s*['"](.+?)['"]\s*;?/g,
+      (match, names, specifier) => {
+        const resolvedPath = resolveSpecifier(specifier, path);
+        const targetId = moduleIds.get(resolvedPath);
+        if (!targetId) return `/* unresolved re-export: ${specifier} */`;
+        const bindings = names.split(',').map(n => {
+          const parts = n.trim().split(/\s+as\s+/);
+          const imported = parts[0].trim();
+          const local = (parts[1] || imported).trim();
+          return local === imported ? `${local}` : `${imported}: ${local}`;
+        });
+        return `const {${bindings.join(',')}} = ${targetId};`;
+      }
+    );
 
     // Rewrite imports to reference module variables
     processed = processed.replace(
@@ -128,8 +148,19 @@ function bundle(modules, entrypoint) {
     for (const m of funcExports) exportedNames.push(m[1]);
     const constExports = source.matchAll(/export\s+(?:const|let)\s+(\w+)/g);
     for (const m of constExports) exportedNames.push(m[1]);
-    const namedExports = source.matchAll(/export\s*\{([^}]+)\}/g);
+    // Re-exports: export { X } from 'Y' — extract the local names
+    const reExports = source.matchAll(/export\s*\{([^}]+)\}\s*from\s/g);
+    for (const m of reExports) {
+      m[1].split(',').forEach(n => {
+        const name = n.trim().split(/\s+as\s+/);
+        exportedNames.push((name[1] || name[0]).trim());
+      });
+    }
+    // Plain re-exports: export { X }
+    const namedExports = source.matchAll(/export\s*\{([^}]+)\}\s*;/g);
     for (const m of namedExports) {
+      // Skip if this is a re-export (already handled above)
+      if (/from\s/.test(m[0])) continue;
       m[1].split(',').forEach(n => {
         const name = n.trim().split(/\s+as\s+/);
         exportedNames.push((name[1] || name[0]).trim());
@@ -140,7 +171,7 @@ function bundle(modules, entrypoint) {
     output += `const ${id} = (function(){\n${processed}\nreturn {${exportedNames.join(',')}};\n})();\n\n`;
   }
 
-  // Call the entry module's init (mount call is in the entry)
+  // Entry module runs last (mount call is in the entry)
   output += '})();\n';
   return output;
 }
