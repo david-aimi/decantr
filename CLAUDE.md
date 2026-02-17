@@ -41,7 +41,7 @@ playground/     — Scaffolded test project
 - `batch(fn)` — Batch multiple signal updates into one effect flush
 
 ### `decantr/router` — src/router/index.js
-- `createRouter(routes, options)` — Create router with route config
+- `createRouter(config)` — Create router. Config: `{ mode: 'hash'|'history', routes: [{path, component}] }`
 - `link(href, attrs, ...children)` — Router-aware anchor element
 - `navigate(path)` — Programmatic navigation
 - `useRoute()` — Get current route signal

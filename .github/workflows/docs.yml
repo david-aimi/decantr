@@ -6,6 +6,8 @@ on:
     paths:
       - 'docs/**'
       - 'src/**'
+      - 'tools/**'
+      - 'cli/**'
   workflow_dispatch:
 
 permissions:

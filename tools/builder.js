@@ -1,4 +1,4 @@
-import { readFile, writeFile, mkdir, stat, readdir, copyFile } from 'node:fs/promises';
+import { readFile, writeFile, mkdir, stat, readdir, copyFile, rm } from 'node:fs/promises';
 import { join, dirname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { createHash } from 'node:crypto';
@@ -27,10 +27,12 @@ function resolveDecantrImport(subpath) {
  * @returns {string[]}
  */
 function findImports(source, baseDir) {
+  // Strip template literal contents to avoid matching imports inside code examples
+  const cleaned = source.replace(/`(?:[^`\\]|\\.)*`/gs, '""');
   const imports = [];
   const regex = /import\s+(?:[\s\S]*?from\s+)?['"](.+?)['"]/g;
   let match;
-  while ((match = regex.exec(source)) !== null) {
+  while ((match = regex.exec(cleaned)) !== null) {
     const specifier = match[1];
     if (specifier.startsWith('decantr')) {
       const subpath = specifier.replace('decantr/', '').replace('decantr', 'core');
@@ -209,6 +211,9 @@ export async function build(projectRoot, options = {}) {
   const outDir = join(projectRoot, options.outDir || 'dist');
   const entrypoint = join(projectRoot, 'src', 'app.js');
 
+  // Clean previous build output
+  await rm(outDir, { recursive: true, force: true });
+
   console.log('\n  decantr build\n');
   console.log('  Resolving modules...');
   const modules = await resolveModules(entrypoint);
@@ -241,6 +246,18 @@ export async function build(projectRoot, options = {}) {
     await writeFile(join(outDir, 'assets', cssFile), cssOutput);
   }
 
+  // Transform HTML: replace dev script tag with bundled script + CSS link
+  function transformHtml(html) {
+    html = html.replace(
+      /<script type="module"[^>]*><\/script>/,
+      `<script src="/assets/${jsFile}"></script>`
+    );
+    if (cssOutput) {
+      html = html.replace('</head>', `<link rel="stylesheet" href="/assets/${cssFile}">\n</head>`);
+    }
+    return html;
+  }
+
   // Read and transform index.html
   let html;
   try {
@@ -248,18 +265,7 @@ export async function build(projectRoot, options = {}) {
   } catch {
     html = '<!DOCTYPE html><html><head></head><body><div id="app"></div></body></html>';
   }
-
-  // Replace module script with bundled script
-  html = html.replace(
-    /<script type="module"[^>]*><\/script>/,
-    `<script src="/assets/${jsFile}"></script>`
-  );
-
-  // Add CSS link
-  if (cssOutput) {
-    html = html.replace('</head>', `<link rel="stylesheet" href="/assets/${cssFile}">\n</head>`);
-  }
-
+  html = transformHtml(html);
   await writeFile(join(outDir, 'index.html'), html);
 
   // Copy public/ assets (excluding index.html) to dist/
@@ -276,7 +282,12 @@ export async function build(projectRoot, options = {}) {
         await copyPublicDir(srcPath, destPath);
       } else {
         await mkdir(dirname(destPath), { recursive: true });
-        await copyFile(srcPath, destPath);
+        if (entry.name.endsWith('.html')) {
+          const content = await readFile(srcPath, 'utf-8');
+          await writeFile(destPath, transformHtml(content));
+        } else {
+          await copyFile(srcPath, destPath);
+        }
       }
     }
   }

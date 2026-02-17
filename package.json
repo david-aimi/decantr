@@ -31,6 +31,9 @@
     "./components": {
       "import": "./src/components/index.js"
     },
+    "./blocks": {
+      "import": "./src/blocks/index.js"
+    },
     "./themes": {
       "import": "./src/css/themes.js"
     },

@@ -20,8 +20,8 @@ export function CLIPage() {
     ),
     h('ul', { style: { lineHeight: '1.8', paddingLeft: '1.5rem', marginBottom: '1.5rem' } },
       h('li', null, h('strong', null, 'Template'), ' \u2014 dashboard (sidebar + router), landing (sections), or demo (both)'),
-      h('li', null, h('strong', null, 'Theme'), ' \u2014 light, dark, ai, nature, pastel, spice, or mono'),
-      h('li', null, h('strong', null, 'Style'), ' \u2014 flat, glass, brutalist, skeuo, or sketchy'),
+      h('li', null, h('strong', null, 'Theme'), ' \u2014 light, dark, ai, nature, pastel, spice, mono, or lava'),
+      h('li', null, h('strong', null, 'Style'), ' \u2014 flat, glass, brutalist, skeuo, sketchy, or lava'),
       h('li', null, h('strong', null, 'Router'), ' \u2014 hash (default) or history')
     ),
 
