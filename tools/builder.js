@@ -108,6 +108,15 @@ function bundle(modules, entrypoint) {
       }
     );
 
+    // Collect names already declared by re-export transformations
+    const declaredNames = new Set();
+    for (const m of processed.matchAll(/const\s*\{([^}]+)\}\s*=\s*_m\d+;/g)) {
+      m[1].split(',').forEach(n => {
+        const name = n.trim().split(/\s*:\s*/);
+        declaredNames.add((name[1] || name[0]).trim());
+      });
+    }
+
     // Rewrite imports to reference module variables
     processed = processed.replace(
       /import\s*\{([^}]+)\}\s*from\s*['"](.+?)['"]\s*;?/g,
@@ -120,7 +129,11 @@ function bundle(modules, entrypoint) {
           const imported = parts[0].trim();
           const local = (parts[1] || imported).trim();
           return local === imported ? `${local}` : `${local}: ${imported}`;
+        }).filter(b => {
+          const name = b.split(/\s*:\s*/)[0].trim();
+          return !declaredNames.has(name);
         });
+        if (bindings.length === 0) return `/* already declared from re-export */`;
         return `const {${bindings.join(',')}} = ${targetId};`;
       }
     );
