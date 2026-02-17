@@ -44,7 +44,9 @@
     "tools/"
   ],
   "scripts": {
-    "test": "node --test test/**/*.test.js"
+    "test": "node --test test/**/*.test.js",
+    "docs:dev": "cd docs && npx decantr dev",
+    "docs:build": "cd docs && npx decantr build"
   },
   "keywords": [
     "framework",

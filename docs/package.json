@@ -1,0 +1,13 @@
+{
+  "name": "decantr-docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "decantr dev",
+    "build": "decantr build"
+  },
+  "dependencies": {
+    "decantr": "file:.."
+  }
+}
