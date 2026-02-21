@@ -30,7 +30,7 @@ function findImports(source, baseDir) {
   // Strip template literal contents to avoid matching imports inside code examples
   const cleaned = source.replace(/`(?:[^`\\]|\\.)*`/gs, '""');
   const imports = [];
-  const regex = /import\s+(?:[\s\S]*?from\s+)?['"](.+?)['"]/g;
+  const regex = /(?:import|export)\s+(?:[\s\S]*?from\s+)?['"](.+?)['"]/g;
   let match;
   while ((match = regex.exec(cleaned)) !== null) {
     const specifier = match[1];
