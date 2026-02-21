@@ -1,0 +1,597 @@
+{
+  "module": "decantr/components",
+  "description": "UI components — all return HTMLElement, all accept inline styles",
+  "components": {
+    "Accordion": {
+      "props": {
+        "items": {
+          "type": "{ id: string, title: string, content: Function }[]",
+          "reactive": true,
+          "required": true
+        },
+        "multiple": {
+          "type": "boolean"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Alert": {
+      "props": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "info",
+            "success",
+            "warning",
+            "error"
+          ],
+          "default": "info"
+        },
+        "dismissible": {
+          "type": "boolean"
+        },
+        "onDismiss": {
+          "type": "Function"
+        },
+        "icon": {
+          "type": "string|Node"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "children": "...(string|Node)",
+      "returns": "HTMLElement"
+    },
+    "Avatar": {
+      "props": {
+        "src": {
+          "type": "string"
+        },
+        "alt": {
+          "type": "string"
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "sm",
+            "lg"
+          ],
+          "default": "medium"
+        },
+        "fallback": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Badge": {
+      "props": {
+        "count": {
+          "type": "number|Function",
+          "reactive": true
+        },
+        "color": {
+          "type": "string"
+        },
+        "dot": {
+          "type": "boolean"
+        },
+        "status": {
+          "type": "string",
+          "enum": [
+            "success",
+            "error",
+            "warning",
+            "processing"
+          ]
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "children": "...Node",
+      "returns": "HTMLElement"
+    },
+    "Breadcrumb": {
+      "props": {
+        "items": {
+          "type": "{ label: string, href?: string, onclick?: Function }[]",
+          "reactive": true,
+          "required": true
+        },
+        "separator": {
+          "type": "string",
+          "default": "'/'"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Button": {
+      "props": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "secondary",
+            "destructive",
+            "success",
+            "warning",
+            "outline",
+            "ghost",
+            "link"
+          ],
+          "default": "none"
+        },
+        "size": {
+          "type": "string",
+          "enum": [
+            "sm",
+            "lg"
+          ],
+          "default": "normal"
+        },
+        "disabled": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "loading": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "class": {
+          "type": "string"
+        },
+        "block": {
+          "type": "boolean"
+        },
+        "onclick": {
+          "type": "Function"
+        }
+      },
+      "children": "...(string|Node)",
+      "returns": "HTMLElement"
+    },
+    "Card": {
+      "props": {
+        "title": {
+          "type": "string"
+        },
+        "hoverable": {
+          "type": "boolean"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "children": "...Node",
+      "returns": "HTMLElement",
+      "subComponents": [
+        "Header",
+        "Body",
+        "Footer"
+      ]
+    },
+    "Checkbox": {
+      "props": {
+        "checked": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "disabled": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "label": {
+          "type": "string"
+        },
+        "indeterminate": {
+          "type": "boolean"
+        },
+        "onchange": {
+          "type": "Function"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "icon": {
+      "params": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "opts",
+          "type": "Object",
+          "optional": true
+        },
+        {
+          "name": "opts.size",
+          "type": "string|number",
+          "optional": true,
+          "default": "1.25em",
+          "description": "CSS size (default: 1.25em)"
+        },
+        {
+          "name": "opts.class",
+          "type": "string",
+          "optional": true
+        }
+      ],
+      "returns": "HTMLElement",
+      "_type": "function"
+    },
+    "Input": {
+      "props": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "text",
+            "password",
+            "number",
+            "email",
+            "search"
+          ]
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string|Function",
+          "reactive": true
+        },
+        "disabled": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "readonly": {
+          "type": "boolean"
+        },
+        "prefix": {
+          "type": "string|Node"
+        },
+        "suffix": {
+          "type": "string|Node"
+        },
+        "error": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "oninput": {
+          "type": "Function"
+        },
+        "ref": {
+          "type": "Function"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Modal": {
+      "props": {
+        "title": {
+          "type": "string"
+        },
+        "visible": {
+          "type": "Function",
+          "required": true
+        },
+        "onClose": {
+          "type": "Function"
+        },
+        "width": {
+          "type": "string",
+          "default": "480px"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "children": "...Node",
+      "returns": "HTMLElement"
+    },
+    "Progress": {
+      "props": {
+        "value": {
+          "type": "number|Function",
+          "reactive": true
+        },
+        "max": {
+          "type": "number",
+          "default": "100"
+        },
+        "label": {
+          "type": "string"
+        },
+        "variant": {
+          "type": "string",
+          "enum": [
+            "primary",
+            "success",
+            "warning",
+            "error"
+          ]
+        },
+        "striped": {
+          "type": "boolean"
+        },
+        "animated": {
+          "type": "boolean"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Select": {
+      "props": {
+        "options": {
+          "type": "{ value: string, label: string, disabled?: boolean }[]"
+        },
+        "value": {
+          "type": "string|Function",
+          "reactive": true
+        },
+        "placeholder": {
+          "type": "string"
+        },
+        "disabled": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "error": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "onchange": {
+          "type": "Function"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Separator": {
+      "props": {
+        "vertical": {
+          "type": "boolean"
+        },
+        "label": {
+          "type": "string"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Skeleton": {
+      "props": {
+        "variant": {
+          "type": "string",
+          "enum": [
+            "text",
+            "rect",
+            "circle"
+          ],
+          "default": "text"
+        },
+        "width": {
+          "type": "string"
+        },
+        "height": {
+          "type": "string"
+        },
+        "lines": {
+          "type": "number"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Switch": {
+      "props": {
+        "checked": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "disabled": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "label": {
+          "type": "string"
+        },
+        "onchange": {
+          "type": "Function"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Table": {
+      "props": {
+        "columns": {
+          "type": "{ key: string, label: string, width?: string, render?: Function }[]",
+          "reactive": true,
+          "required": true
+        },
+        "data": {
+          "type": "Object[]",
+          "required": true
+        },
+        "striped": {
+          "type": "boolean"
+        },
+        "hoverable": {
+          "type": "boolean"
+        },
+        "compact": {
+          "type": "boolean"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Tabs": {
+      "props": {
+        "tabs": {
+          "type": "{ id: string, label: string, content: Function }[]",
+          "reactive": true,
+          "required": true
+        },
+        "active": {
+          "type": "string|Function",
+          "reactive": true
+        },
+        "onchange": {
+          "type": "Function"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "Textarea": {
+      "props": {
+        "placeholder": {
+          "type": "string"
+        },
+        "value": {
+          "type": "string|Function",
+          "reactive": true
+        },
+        "disabled": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "error": {
+          "type": "boolean|Function",
+          "reactive": true
+        },
+        "rows": {
+          "type": "number",
+          "default": "3"
+        },
+        "resize": {
+          "type": "string",
+          "enum": [
+            "none",
+            "vertical",
+            "horizontal",
+            "both"
+          ],
+          "default": "vertical"
+        },
+        "oninput": {
+          "type": "Function"
+        },
+        "ref": {
+          "type": "Function"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "returns": "HTMLElement"
+    },
+    "toast": {
+      "params": [
+        {
+          "name": "props",
+          "type": "Object"
+        },
+        {
+          "name": "props.message",
+          "type": "string"
+        },
+        {
+          "name": "props.variant",
+          "type": "string",
+          "optional": true,
+          "enum": [
+            "info",
+            "success",
+            "warning",
+            "error"
+          ],
+          "default": "info",
+          "description": "info|success|warning|error (default: info)"
+        },
+        {
+          "name": "props.duration",
+          "type": "number",
+          "optional": true,
+          "default": "3000, 0 = manual",
+          "description": "Auto-dismiss in ms (default: 3000, 0 = manual)"
+        },
+        {
+          "name": "props.position",
+          "type": "string",
+          "optional": true,
+          "enum": [
+            "top-right",
+            "top-left",
+            "bottom-right",
+            "bottom-left"
+          ],
+          "default": "top-right",
+          "description": "top-right|top-left|bottom-right|bottom-left (default: top-right)"
+        }
+      ],
+      "returns": "{ dismiss: Function }",
+      "description": "Show a toast notification.",
+      "_type": "function"
+    },
+    "Tooltip": {
+      "props": {
+        "content": {
+          "type": "string",
+          "required": true
+        },
+        "position": {
+          "type": "string",
+          "enum": [
+            "top",
+            "bottom",
+            "left",
+            "right"
+          ],
+          "default": "top"
+        },
+        "delay": {
+          "type": "number",
+          "default": "200"
+        },
+        "class": {
+          "type": "string"
+        }
+      },
+      "children": "...Node",
+      "returns": "HTMLElement"
+    }
+  }
+}

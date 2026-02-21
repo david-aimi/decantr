@@ -3,6 +3,7 @@
  * Injected once on first component render.
  * Visual styling comes from the active design style (src/css/styles.js).
  */
+import { createEffect } from '../state/index.js';
 
 let injected = false;
 
@@ -27,9 +28,9 @@ const BASE_CSS = [
 
   // Card structure
   '.d-card{overflow:hidden}',
-  '.d-card-header{padding:1.25rem 1.25rem 0;font-weight:600;font-size:1.125rem}',
-  '.d-card-body{padding:1.25rem}',
-  '.d-card-footer{padding:0 1.25rem 1.25rem}',
+  '.d-card-header{padding:var(--d-pad,1.25rem) var(--d-pad,1.25rem) 0;font-weight:600;font-size:1.125rem}',
+  '.d-card-body{padding:var(--d-pad,1.25rem)}',
+  '.d-card-footer{padding:0 var(--d-pad,1.25rem) var(--d-pad,1.25rem)}',
 
   // Badge structure
   '.d-badge{display:inline-flex;align-items:center;gap:0.25rem;font-size:0.75rem;padding:0.125rem 0.5rem;font-weight:500;line-height:1.5;vertical-align:middle}',
@@ -40,8 +41,9 @@ const BASE_CSS = [
   // Modal structure
   '.d-modal-overlay{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;z-index:1000}',
   '.d-modal-content{max-width:90vw;max-height:85vh;overflow:auto}',
-  '.d-modal-header{display:flex;justify-content:space-between;align-items:center}',
-  '.d-modal-footer{display:flex;justify-content:flex-end;gap:0.5rem}',
+  '.d-modal-header{display:flex;justify-content:space-between;align-items:center;padding:var(--d-pad,1.25rem) var(--d-pad,1.25rem) 0}',
+  '.d-modal-body{padding:var(--d-pad,1.25rem)}',
+  '.d-modal-footer{display:flex;justify-content:flex-end;gap:0.5rem;padding:0 var(--d-pad,1.25rem) var(--d-pad,1.25rem)}',
   '.d-modal-close{cursor:pointer;line-height:1}',
 
   // Textarea structure
@@ -91,6 +93,7 @@ const BASE_CSS = [
   '.d-accordion-trigger:focus-visible{outline:2px solid var(--c1);outline-offset:-2px}',
   '.d-accordion-icon{font-size:0.75rem;transition:transform 0.2s}',
   '.d-accordion-open .d-accordion-icon{transform:rotate(180deg)}',
+  '.d-accordion-region{transition:height 0.25s ease-out}',
   '.d-accordion-content{padding:0 1rem 0.75rem}',
 
   // Separator structure
@@ -161,8 +164,17 @@ const BASE_CSS = [
   '.d-toast{animation:d-toast-in 0.2s ease}',
   '.d-toast-exit{opacity:0;transform:translateY(-8px);transition:all 0.2s ease}',
 
+  // Chip structure
+  '.d-chip{display:inline-flex;align-items:center;gap:0.375rem;border-radius:9999px;padding:0.25rem 0.75rem;font-size:0.8125rem;font-weight:500;line-height:1.5;cursor:default;transition:all 0.2s ease;white-space:nowrap;vertical-align:middle}',
+  '.d-chip-sm{padding:0.125rem 0.5rem;font-size:0.75rem;gap:0.25rem}',
+  '.d-chip-icon{flex-shrink:0;width:1em;height:1em}',
+  '.d-chip-label{overflow:hidden;text-overflow:ellipsis}',
+  '.d-chip-remove{display:inline-flex;align-items:center;justify-content:center;background:transparent;border:none;cursor:pointer;font-size:1em;line-height:1;padding:0;margin-left:0.125rem;opacity:0.6;transition:opacity 0.15s;font-family:inherit}',
+  '.d-chip-remove:hover{opacity:1}',
+  '.d-chip-interactive{cursor:pointer}',
+
   // Reduced motion
-  '@media(prefers-reduced-motion:reduce){.d-btn,.d-card,.d-input-wrap,.d-badge,.d-badge-dot,.d-modal-overlay,.d-modal-content,.d-btn-loading::after,.d-textarea-wrap,.d-checkbox-check,.d-switch-track,.d-switch-thumb,.d-select,.d-select-dropdown,.d-tab,.d-accordion-icon,.d-accordion-content,.d-progress-bar,.d-skeleton,.d-tooltip,.d-toast,.d-toast-exit{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important}}'
+  '@media(prefers-reduced-motion:reduce){.d-btn,.d-card,.d-input-wrap,.d-badge,.d-badge-dot,.d-modal-overlay,.d-modal-content,.d-btn-loading::after,.d-textarea-wrap,.d-checkbox-check,.d-switch-track,.d-switch-thumb,.d-select,.d-select-dropdown,.d-tab,.d-accordion-icon,.d-accordion-region,.d-accordion-content,.d-progress-bar,.d-skeleton,.d-tooltip,.d-toast,.d-toast-exit,.d-chip{animation-duration:0.01ms !important;animation-iteration-count:1 !important;transition-duration:0.01ms !important}}'
 ].join('');
 
 export function injectBase() {
@@ -189,4 +201,47 @@ export function cx(...classes) {
 
 export function resetBase() {
   injected = false;
+}
+
+/**
+ * Toggle a boolean attribute reactively.
+ * @param {HTMLElement} el
+ * @param {boolean|Function} prop
+ * @param {string} attr
+ */
+export function reactiveAttr(el, prop, attr) {
+  if (typeof prop === 'function') {
+    createEffect(() => { prop() ? el.setAttribute(attr, '') : el.removeAttribute(attr); });
+  } else if (prop) {
+    el.setAttribute(attr, '');
+  }
+}
+
+/**
+ * Toggle a CSS class reactively.
+ * @param {HTMLElement} el
+ * @param {boolean|Function} prop
+ * @param {string} baseClass
+ * @param {string} activeClass
+ */
+export function reactiveClass(el, prop, baseClass, activeClass) {
+  if (typeof prop === 'function') {
+    createEffect(() => { el.className = prop() ? cx(baseClass, activeClass) : baseClass; });
+  } else if (prop) {
+    el.className = cx(baseClass, activeClass);
+  }
+}
+
+/**
+ * Sync a DOM property reactively.
+ * @param {HTMLElement} el
+ * @param {*|Function} prop
+ * @param {string} domProp
+ */
+export function reactiveProp(el, prop, domProp) {
+  if (typeof prop === 'function') {
+    createEffect(() => { el[domProp] = prop(); });
+  } else if (prop !== undefined) {
+    el[domProp] = prop;
+  }
 }

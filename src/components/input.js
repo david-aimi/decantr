@@ -1,6 +1,5 @@
 import { h } from '../core/index.js';
-import { createEffect } from '../state/index.js';
-import { injectBase, cx } from './_base.js';
+import { injectBase, cx, reactiveAttr, reactiveClass, reactiveProp } from './_base.js';
 
 /**
  * @param {Object} [props]
@@ -36,25 +35,8 @@ export function Input(props = {}) {
 
   if (ref) ref(inputEl);
 
-  // Handle reactive value
-  if (typeof value === 'function') {
-    createEffect(() => {
-      inputEl.value = value();
-    });
-  } else if (value !== undefined) {
-    inputEl.value = value;
-  }
-
-  // Handle reactive disabled
-  if (typeof disabled === 'function') {
-    createEffect(() => {
-      const v = disabled();
-      if (v) inputEl.setAttribute('disabled', '');
-      else inputEl.removeAttribute('disabled');
-    });
-  } else if (disabled) {
-    inputEl.setAttribute('disabled', '');
-  }
+  reactiveProp(inputEl, value, 'value');
+  reactiveAttr(inputEl, disabled, 'disabled');
 
   const children = [];
   if (prefix) {
@@ -73,19 +55,7 @@ export function Input(props = {}) {
 
   const wrap = h('div', { class: wrapClass }, ...children);
 
-  // Handle reactive error
-  if (typeof error === 'function') {
-    createEffect(() => {
-      const v = error();
-      if (v) {
-        wrap.className = cx(wrapClass, 'd-input-error');
-      } else {
-        wrap.className = wrapClass;
-      }
-    });
-  } else if (error) {
-    wrap.className = cx(wrapClass, 'd-input-error');
-  }
+  reactiveClass(wrap, error, wrapClass, 'd-input-error');
 
   return wrap;
 }

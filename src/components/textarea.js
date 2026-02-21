@@ -1,6 +1,5 @@
 import { h } from '../core/index.js';
-import { createEffect } from '../state/index.js';
-import { injectBase, cx } from './_base.js';
+import { injectBase, cx, reactiveAttr, reactiveClass, reactiveProp } from './_base.js';
 
 /**
  * @param {Object} [props]
@@ -34,30 +33,12 @@ export function Textarea(props = {}) {
 
   if (ref) ref(textareaEl);
 
-  if (typeof value === 'function') {
-    createEffect(() => { textareaEl.value = value(); });
-  } else if (value !== undefined) {
-    textareaEl.value = value;
-  }
-
-  if (typeof disabled === 'function') {
-    createEffect(() => {
-      if (disabled()) textareaEl.setAttribute('disabled', '');
-      else textareaEl.removeAttribute('disabled');
-    });
-  } else if (disabled) {
-    textareaEl.setAttribute('disabled', '');
-  }
+  reactiveProp(textareaEl, value, 'value');
+  reactiveAttr(textareaEl, disabled, 'disabled');
 
   const wrap = h('div', { class: wrapClass }, textareaEl);
 
-  if (typeof error === 'function') {
-    createEffect(() => {
-      wrap.className = error() ? cx(wrapClass, 'd-textarea-error') : wrapClass;
-    });
-  } else if (error) {
-    wrap.className = cx(wrapClass, 'd-textarea-error');
-  }
+  reactiveClass(wrap, error, wrapClass, 'd-textarea-error');
 
   return wrap;
 }

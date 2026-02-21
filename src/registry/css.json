@@ -1,0 +1,55 @@
+{
+  "module": "decantr/css",
+  "description": "Atomic CSS engine + theme management",
+  "functions": {
+    "css": {
+      "params": [
+        {
+          "name": "classes",
+          "type": "...string"
+        }
+      ],
+      "returns": "string"
+    },
+    "define": {
+      "params": [
+        {
+          "name": "name",
+          "type": "string"
+        },
+        {
+          "name": "declaration",
+          "type": "string"
+        }
+      ]
+    },
+    "setTheme": {
+      "params": [
+        {
+          "name": "id",
+          "type": "string"
+        }
+      ]
+    },
+    "getTheme": {
+      "returns": "() => string"
+    },
+    "getThemeMeta": {
+      "returns": "{ isDark: boolean, contrastText: string, surfaceAlpha: string } | null"
+    },
+    "registerTheme": {
+      "params": [
+        {
+          "name": "theme",
+          "type": "{ id: string, name: string, colors: Object, meta?: Object, tokens?: Object, global?: string, components?: Object }"
+        }
+      ]
+    },
+    "getThemeList": {
+      "returns": "{ id: string, name: string }[]"
+    },
+    "getActiveCSS": {
+      "returns": "string"
+    }
+  }
+}

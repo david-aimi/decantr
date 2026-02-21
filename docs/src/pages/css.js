@@ -167,13 +167,13 @@ console.log(style());  // 'glass'` }),
     ),
     CodeBlock({ code: `import { css, define } from 'decantr/css';
 
-// Use built-in atoms
-h('div', { class: css('p4', 'flex', 'gap2', 'bg2', 'rounded') }, ...)
+// Use built-in atoms (all prefixed with _)
+h('div', { class: css('_p4', '_flex', '_gap2', '_bg2', '_r2') }, ...)
 
 // Define custom atoms
 define('brand-bg', 'background: linear-gradient(135deg, var(--c1), var(--c6))');
 
-h('div', { class: css('brand-bg', 'p4') }, ...)` }),
+h('div', { class: css('brand-bg', '_p4') }, ...)` }),
 
     // Animations
     h('h2', { style: { fontSize: '1.5rem', fontWeight: '600', marginTop: '1.5rem', marginBottom: '0.75rem' } }, 'Animations'),

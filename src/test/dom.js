@@ -237,6 +237,7 @@ class Document_ extends Node_ {
     this.appendChild(this.documentElement);
   }
   createElement(tag) { return new Element_(tag); }
+  createElementNS(ns, tag) { return new Element_(tag); }
   createTextNode(data) { return new Text_(data); }
   createComment(data) { return new Comment_(data); }
   getElementById(id) { return queryOne(this.documentElement, `#${id}`); }

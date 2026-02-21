@@ -1,7 +1,7 @@
 import { h } from 'decantr/core';
 import { createSignal, createEffect } from 'decantr/state';
 import { link } from 'decantr/router';
-import { setTheme, getTheme, getThemeList, setStyle, getStyle, getStyleList } from 'decantr/css';
+import { setTheme, getTheme, getThemeList } from 'decantr/css';
 
 export function Navbar() {
   const [scrolled, setScrolled] = createSignal(false);
@@ -11,7 +11,6 @@ export function Navbar() {
   handler();
 
   const themes = getThemeList();
-  const styles = getStyleList();
 
   const themeSelect = h('select', {
     'aria-label': 'Select theme',
@@ -24,20 +23,6 @@ export function Navbar() {
   },
     ...themes.map(t =>
       h('option', { value: t.id, selected: t.id === getTheme()() }, t.name)
-    )
-  );
-
-  const styleSelect = h('select', {
-    'aria-label': 'Select style',
-    style: {
-      padding: '0.25rem 0.375rem', borderRadius: '4px',
-      border: '1px solid var(--c5)', background: 'transparent',
-      color: 'var(--c3)', fontSize: '0.75rem', cursor: 'pointer'
-    },
-    onchange: (e) => setStyle(e.target.value)
-  },
-    ...styles.map(s =>
-      h('option', { value: s.id, selected: s.id === getStyle()() }, s.name)
     )
   );
 
@@ -58,6 +43,7 @@ export function Navbar() {
     // Center: nav links
     h('div', { style: { display: 'flex', gap: '1.5rem', alignItems: 'center' } },
       link({ href: '/getting-started', style: { textDecoration: 'none', color: 'var(--c3)', fontSize: '0.875rem', fontWeight: '500' } }, 'Docs'),
+      link({ href: '/how-it-works', style: { textDecoration: 'none', color: 'var(--c3)', fontSize: '0.875rem', fontWeight: '500' } }, 'How It Works'),
       link({ href: '/components', style: { textDecoration: 'none', color: 'var(--c3)', fontSize: '0.875rem', fontWeight: '500' } }, 'Components'),
       h('a', {
         href: 'https://github.com/decantr-ai/decantr', target: '_blank', rel: 'noopener',
@@ -65,10 +51,9 @@ export function Navbar() {
       }, 'GitHub')
     ),
 
-    // Right: theme/style selects
+    // Right: theme select
     h('div', { style: { display: 'flex', gap: '0.5rem', alignItems: 'center' } },
-      themeSelect,
-      styleSelect
+      themeSelect
     )
   );
 

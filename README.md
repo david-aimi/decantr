@@ -21,6 +21,7 @@ npx decantr dev
 - **Dual router** — Hash or History API, user chooses at init
 - **Built-in test runner** — Wraps `node:test` with DOM testing helpers
 - **AI manifests** — `.decantr/` directory with JSON schemas for LLM consumption
+- **Machine-readable registry** — `src/registry/` with split API specs (index + per-module detail files) for AI agents
 - **< 2KB gzipped** — Hello world JS runtime under 2KB gzipped
 
 ## Architecture
@@ -30,6 +31,7 @@ decantr/core    — h(), text(), cond(), list(), mount()
 decantr/state   — createSignal, createEffect, createMemo, createStore, batch
 decantr/router  — createRouter, link, navigate, useRoute
 decantr/css     — css(), define()
+decantr/tags    — Proxy-based tag functions (div, p, span...) — fewer tokens than h()
 decantr/test    — render, fire, flush + node:test re-exports
 ```
 
@@ -48,15 +50,18 @@ decantr test --watch  # Run tests in watch mode
 Every component is a function that returns an HTMLElement:
 
 ```javascript
-import { h, text } from 'decantr/core';
+import { tags } from 'decantr/tags';
+import { text } from 'decantr/core';
 import { createSignal } from 'decantr/state';
+
+const { div, button, span } = tags;
 
 export function Counter({ initial = 0 } = {}) {
   const [count, setCount] = createSignal(initial);
-  return h('div', { class: 'flex gap2 p4' },
-    h('button', { onclick: () => setCount(c => c - 1) }, '-'),
-    h('span', null, text(() => String(count()))),
-    h('button', { onclick: () => setCount(c => c + 1) }, '+')
+  return div({ class: 'flex gap2 p4' },
+    button({ onclick: () => setCount(c => c - 1) }, '-'),
+    span(text(() => String(count()))),
+    button({ onclick: () => setCount(c => c + 1) }, '+')
   );
 }
 ```

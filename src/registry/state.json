@@ -1,0 +1,65 @@
+{
+  "module": "decantr/state",
+  "description": "Reactive primitives — signals, effects, memos, stores, batch",
+  "functions": {
+    "createSignal": {
+      "params": [
+        {
+          "name": "initialValue",
+          "type": "T"
+        }
+      ],
+      "returns": "[() => T, (v: T | ((prev: T) => T)) => void]"
+    },
+    "createEffect": {
+      "params": [
+        {
+          "name": "fn",
+          "type": "Function"
+        }
+      ],
+      "returns": "Function"
+    },
+    "createMemo": {
+      "params": [
+        {
+          "name": "fn",
+          "type": "() => T"
+        }
+      ],
+      "returns": "() => T"
+    },
+    "createStore": {
+      "params": [
+        {
+          "name": "initialValue",
+          "type": "T"
+        }
+      ],
+      "returns": "T"
+    },
+    "useLocalStorage": {
+      "params": [
+        {
+          "name": "key",
+          "type": "string",
+          "description": "localStorage key"
+        },
+        {
+          "name": "initialValue",
+          "type": "T",
+          "description": "fallback if no stored value"
+        }
+      ],
+      "returns": "[() => T, (v: T | ((prev: T) => T)) => void]"
+    },
+    "batch": {
+      "params": [
+        {
+          "name": "fn",
+          "type": "Function"
+        }
+      ]
+    }
+  }
+}

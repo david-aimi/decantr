@@ -1,0 +1,51 @@
+{
+  "$schema": "https://decantr.ai/schemas/registry.v1.json",
+  "version": "0.3.0",
+  "generated": "2026-02-21",
+  "modules": {
+    "decantr/core": {
+      "description": "DOM engine — hyperscript rendering, conditional, list, mount, lifecycle",
+      "file": "core.json",
+      "exports": 7
+    },
+    "decantr/state": {
+      "description": "Reactive primitives — signals, effects, memos, stores, batch",
+      "file": "state.json",
+      "exports": 6
+    },
+    "decantr/router": {
+      "description": "Client-side routing — hash or history mode",
+      "file": "router.json",
+      "exports": 4
+    },
+    "decantr/css": {
+      "description": "Atomic CSS engine + theme management",
+      "file": "css.json",
+      "exports": 8
+    },
+    "decantr/components": {
+      "description": "UI components — all return HTMLElement, all accept inline styles",
+      "file": "components.json",
+      "exports": 21
+    },
+    "decantr/kit/auth": {
+      "description": "auth domain kit",
+      "file": "kit-auth.json",
+      "exports": 4
+    },
+    "decantr/kit/content": {
+      "description": "content domain kit",
+      "file": "kit-content.json",
+      "exports": 5
+    },
+    "decantr/kit/dashboard": {
+      "description": "dashboard domain kit",
+      "file": "kit-dashboard.json",
+      "exports": 7
+    },
+    "decantr/tags": {
+      "description": "Proxy-based tag functions for concise markup",
+      "usage": "import { tags } from 'decantr/tags'; const { div, p } = tags; div({ class: 'card' }, p('Content'))"
+    }
+  }
+}

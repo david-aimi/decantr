@@ -114,6 +114,16 @@ export function createMemo(fn) {
  * @param {T} initialValue
  * @returns {T}
  */
+export function untrack(fn) {
+  const prev = currentEffect;
+  setCurrentEffect(null);
+  try {
+    return fn();
+  } finally {
+    setCurrentEffect(prev);
+  }
+}
+
 export function createStore(initialValue) {
   /** @type {Map<string|symbol, Set<{run: Function}>>} */
   const subscribers = new Map();
@@ -149,4 +159,20 @@ export function createStore(initialValue) {
       return result;
     }
   });
+}
+
+/**
+ * @template T
+ * @param {string} key - localStorage key
+ * @param {T} initialValue - fallback if no stored value
+ * @returns {[() => T, (v: T | ((prev: T) => T)) => void]}
+ */
+export function useLocalStorage(key, initialValue) {
+  const stored = typeof localStorage !== 'undefined' ? localStorage.getItem(key) : null;
+  const [get, set] = createSignal(stored !== null ? JSON.parse(stored) : initialValue);
+  return [get, (v) => {
+    const next = typeof v === 'function' ? v(get()) : v;
+    set(next);
+    if (typeof localStorage !== 'undefined') localStorage.setItem(key, JSON.stringify(next));
+  }];
 }

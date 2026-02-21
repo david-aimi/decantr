@@ -1,35 +1,9 @@
 import { h, text } from 'decantr/core';
 import { createSignal } from 'decantr/state';
 import { link } from 'decantr/router';
-import { setTheme, getThemeList, setStyle, getStyleList } from 'decantr/css';
-import { Button, Card, Input, Badge } from 'decantr/components';
+import { Button, Card } from 'decantr/components';
 import { CodeBlock } from '../components/code-block.js';
-
-// --- Landing CSS injection ---
-const landingStyleInjected = { done: false };
-
-function injectLandingStyles() {
-  if (landingStyleInjected.done || typeof document === 'undefined') return;
-  landingStyleInjected.done = true;
-  const style = document.createElement('style');
-  style.setAttribute('data-decantr-landing', '');
-  style.textContent = `
-.landing-glow{position:absolute;border-radius:50%;filter:blur(80px);opacity:0.5;pointer-events:none}
-.landing-glow-1{width:500px;height:500px;background:color-mix(in srgb,var(--c1) 15%,transparent);top:-100px;left:-100px}
-.landing-glow-2{width:400px;height:400px;background:color-mix(in srgb,var(--c6) 12%,transparent);bottom:-80px;right:-80px}
-.landing-grid{position:absolute;inset:0;background-image:linear-gradient(var(--c5) 1px,transparent 1px),linear-gradient(90deg,var(--c5) 1px,transparent 1px);background-size:64px 64px;opacity:0.3;-webkit-mask-image:radial-gradient(ellipse at center,black 20%,transparent 70%);mask-image:radial-gradient(ellipse at center,black 20%,transparent 70%);pointer-events:none}
-@keyframes landing-fade-up{from{opacity:0;transform:translateY(24px)}to{opacity:1;transform:translateY(0)}}
-.landing-animate{animation:landing-fade-up 0.6s ease forwards;opacity:0}
-.landing-animate-delay-1{animation-delay:0.12s}
-.landing-animate-delay-2{animation-delay:0.24s}
-.landing-animate-delay-3{animation-delay:0.36s}
-@media(prefers-reduced-motion:reduce){.landing-animate{animation:none;opacity:1}}
-.landing-stat:hover{transform:translateY(-2px)}
-.landing-stat{transition:transform 0.2s ease}
-@media(max-width:768px){.landing-hero-cta{flex-direction:column;align-items:center}.landing-stats-grid{grid-template-columns:repeat(2,1fr)!important}.landing-code-grid{grid-template-columns:1fr!important}.landing-features-grid{grid-template-columns:1fr!important}.landing-theme-buttons{justify-content:center}}
-`;
-  document.head.appendChild(style);
-}
+import { injectLandingStyles } from '../components/landing-styles.js';
 
 // --- Data ---
 const counterCode = `import { h, mount } from 'decantr/core';
@@ -44,7 +18,7 @@ function Counter() {
       () => count()
     ),
     h('div', { style: { display: 'flex', gap: '0.5rem', justifyContent: 'center' } },
-      Button({ onclick: () => setCount(c => c - 1) }, '−'),
+      Button({ onclick: () => setCount(c => c - 1) }, '\u2212'),
       Button({ variant: 'primary', onclick: () => setCount(c => c + 1) }, '+')
     )
   );
@@ -57,14 +31,14 @@ const features = [
   { title: 'Signal Reactivity', desc: 'Fine-grained reactivity with signals, effects, memos, and stores. No virtual DOM overhead.', accent: 'var(--c6)' },
   { title: 'AI-Native Design', desc: 'Designed for AI agents to generate, read, and maintain. Simple patterns, zero magic.', accent: 'var(--c7)' },
   { title: 'Tiny Bundle', desc: 'Under 2KB gzipped for hello world. Real DOM nodes, no runtime diffing overhead.', accent: 'var(--c8)' },
-  { title: '35 Visual Combos', desc: '7 color themes and 5 design styles. Switch at runtime with a single function call.', accent: 'var(--c9)' },
+  { title: 'AI Prompt Ready', desc: 'Pre-constructed prompts and machine-readable manifests. Scaffold with 100% accuracy via ChatGPT or Claude.', accent: 'var(--c9)' },
   { title: 'Built-in Tooling', desc: 'Dev server with hot reload, production builder, test runner, and CLI scaffolding.', accent: 'var(--c4)' }
 ];
 
 const stats = [
   { value: '0', label: 'Dependencies' },
   { value: '<2KB', label: 'Gzipped' },
-  { value: '35', label: 'Visual Combos' },
+  { value: '5', label: 'Themes' },
   { value: 'Real', label: 'DOM' }
 ];
 
@@ -85,6 +59,16 @@ function HeroSection() {
 
     // Content
     h('div', { style: { position: 'relative', zIndex: '1', maxWidth: '900px', margin: '0 auto' } },
+      h('img', {
+        src: '/images/logo.jpg',
+        alt: '',
+        'aria-hidden': 'true',
+        class: 'landing-animate',
+        style: {
+          height: '96px', width: 'auto', margin: '0 auto 1.5rem', display: 'block',
+          borderRadius: '12px'
+        }
+      }),
       h('h1', {
         class: 'landing-animate',
         style: {
@@ -98,9 +82,12 @@ function HeroSection() {
         class: 'landing-animate landing-animate-delay-1',
         style: {
           fontSize: 'clamp(1.125rem, 2.5vw, 1.5rem)', color: 'var(--c4)',
-          lineHeight: '1.6', maxWidth: '640px', margin: '0 auto 2rem'
+          lineHeight: '1.6', maxWidth: '720px', margin: '0 auto 2rem'
         }
-      }, 'AI-first web framework. Zero dependencies. Native JS/CSS/HTML with signal reactivity, 7 themes, and 5 design styles.'),
+      },
+        h('strong', { style: { color: 'var(--c3)' } }, 'The AI-native UI framework.'),
+        ' Zero dependencies. No TypeScript. No React. No Angular. No Tailwind. Just pure JS, CSS, and HTML \u2014 designed for LLMs to read, generate, and ship production web applications.'
+      ),
 
       // Install command
       h('div', {
@@ -127,6 +114,9 @@ function HeroSection() {
       },
         link({ href: '/getting-started', style: { textDecoration: 'none' } },
           Button({ variant: 'primary', size: 'lg' }, 'Get Started')
+        ),
+        link({ href: '/how-it-works', style: { textDecoration: 'none' } },
+          Button({ variant: 'outline', size: 'lg' }, 'How It Works')
         ),
         h('a', {
           href: 'https://github.com/decantr-ai/decantr', target: '_blank', rel: 'noopener',
@@ -275,107 +265,6 @@ function FeaturesSection() {
   );
 }
 
-function ThemeShowcaseSection() {
-  const themes = getThemeList();
-  const stylesList = getStyleList();
-  const [activeTheme, setActiveTheme] = createSignal(themes[0]?.id || 'light');
-  const [activeStyle, setActiveStyle] = createSignal(stylesList[0]?.id || 'flat');
-
-  function pickTheme(id) {
-    setActiveTheme(id);
-    setTheme(id);
-  }
-
-  function pickStyle(id) {
-    setActiveStyle(id);
-    setStyle(id);
-  }
-
-  return h('section', { style: { padding: '6rem 2rem' } },
-    h('div', { style: { maxWidth: '900px', margin: '0 auto' } },
-      h('h2', {
-        style: {
-          fontSize: '2rem', fontWeight: '700', textAlign: 'center',
-          marginBottom: '0.75rem', color: 'var(--c3)'
-        }
-      }, '35 visual combinations'),
-      h('p', {
-        style: {
-          textAlign: 'center', color: 'var(--c4)', marginBottom: '2.5rem',
-          fontSize: '1.125rem'
-        }
-      }, 'Pick a theme and style. Watch the entire site transform.'),
-
-      // Theme buttons
-      h('div', {
-        style: { textAlign: 'center', marginBottom: '1rem' }
-      },
-        h('p', {
-          style: {
-            fontSize: '0.6875rem', fontWeight: '600', textTransform: 'uppercase',
-            letterSpacing: '0.08em', color: 'var(--c4)', marginBottom: '0.75rem'
-          }
-        }, 'Themes'),
-        h('div', {
-          class: 'landing-theme-buttons',
-          style: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }
-        },
-          ...themes.map(t =>
-            Button({
-              variant: activeTheme() === t.id ? 'primary' : 'outline',
-              onclick: () => pickTheme(t.id)
-            }, t.name)
-          )
-        )
-      ),
-
-      // Style buttons
-      h('div', {
-        style: { textAlign: 'center', marginBottom: '2.5rem' }
-      },
-        h('p', {
-          style: {
-            fontSize: '0.6875rem', fontWeight: '600', textTransform: 'uppercase',
-            letterSpacing: '0.08em', color: 'var(--c4)', marginBottom: '0.75rem'
-          }
-        }, 'Styles'),
-        h('div', {
-          class: 'landing-theme-buttons',
-          style: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', justifyContent: 'center' }
-        },
-          ...stylesList.map(s =>
-            Button({
-              variant: activeStyle() === s.id ? 'primary' : 'outline',
-              onclick: () => pickStyle(s.id)
-            }, s.name)
-          )
-        )
-      ),
-
-      // Preview area
-      Card({ title: 'Preview' },
-        h('div', { style: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap', marginBottom: '1.25rem' } },
-          Button({ variant: 'primary' }, 'Primary'),
-          Button({ variant: 'secondary' }, 'Secondary'),
-          Button({ variant: 'destructive' }, 'Destructive'),
-          Button({ variant: 'success' }, 'Success'),
-          Button({ variant: 'outline' }, 'Outline'),
-          Button({ variant: 'ghost' }, 'Ghost')
-        ),
-        h('div', { style: { marginBottom: '1.25rem', maxWidth: '320px' } },
-          Input({ placeholder: 'Type something...', 'aria-label': 'Preview input' })
-        ),
-        h('div', { style: { display: 'flex', gap: '0.5rem', flexWrap: 'wrap' } },
-          Badge({ status: 'success' }, 'Success'),
-          Badge({ status: 'error' }, 'Error'),
-          Badge({ status: 'warning' }, 'Warning'),
-          Badge({ status: 'processing' }, 'Processing')
-        )
-      )
-    )
-  );
-}
-
 function CTASection() {
   return h('section', {
     style: {
@@ -417,7 +306,6 @@ export function Home() {
     StatsSection(),
     CodeShowcaseSection(),
     FeaturesSection(),
-    ThemeShowcaseSection(),
     CTASection()
   );
 }

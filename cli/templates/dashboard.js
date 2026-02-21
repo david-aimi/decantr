@@ -2,7 +2,7 @@
  * Dashboard scaffold: sidebar + header + pages (Welcome, Overview, Data, Settings).
  */
 
-import { welcomeJs, iconName, iconExpr, iconImport } from './shared.js';
+import { welcomeJs, iconName, iconExpr, iconImport, optIcon } from './shared.js';
 
 export function dashboardFiles(opts) {
   return [
@@ -19,10 +19,10 @@ export function dashboardFiles(opts) {
 }
 
 function appJs(opts) {
-  return `import { h, mount } from 'decantr/core';
+  return `import { mount } from 'decantr/core';
+import { tags } from 'decantr/tags';
 import { createRouter } from 'decantr/router';
 import { setTheme } from 'decantr/css';
-import { setStyle } from 'decantr/css';
 import { Welcome } from './pages/welcome.js';
 import { Overview } from './pages/overview.js';
 import { DataPage } from './pages/data.js';
@@ -30,8 +30,9 @@ import { Settings } from './pages/settings.js';
 import { Sidebar } from './components/sidebar.js';
 import { Header } from './components/header.js';
 
+const { div, main } = tags;
+
 setTheme('${opts.theme}');
-setStyle('${opts.style}');
 
 const router = createRouter({
   mode: '${opts.router}',
@@ -44,11 +45,11 @@ const router = createRouter({
 });
 
 function App() {
-  return h('div', { style: { display: 'flex', minHeight: '100vh' } },
+  return div({ style: { display: 'flex', minHeight: '100vh' } },
     Sidebar({ router }),
-    h('div', { style: { flex: '1', display: 'flex', flexDirection: 'column' } },
+    div({ style: { flex: '1', display: 'flex', flexDirection: 'column' } },
       Header({ title: 'Dashboard' }),
-      h('main', { style: { flex: '1', padding: '1.5rem', background: 'var(--c0)' } },
+      main({ style: { flex: '1', padding: '1.5rem', background: 'var(--c0)' } },
         router.outlet()
       )
     )
@@ -94,30 +95,31 @@ function sidebarJs(opts) {
           }
         }, item.label)`;
 
-  return `import { h } from 'decantr/core';
+  return `import { tags } from 'decantr/tags';
 import { createSignal } from 'decantr/state';
 import { link } from 'decantr/router';
 import { Button } from 'decantr/components';
-${iconImport(opts)}
+${iconImport(opts)}const { aside, div, nav } = tags;
+
 export function Sidebar({ router }) {
   const [collapsed, setCollapsed] = createSignal(false);
 
 ${navItemsDef}
 
-  return h('aside', {
+  return aside({
     style: {
       width: '240px', background: 'var(--c2)', borderRight: '1px solid var(--c5)',
       display: 'flex', flexDirection: 'column', transition: 'width 0.2s ease',
       flexShrink: '0'
     }
   },
-    h('div', { style: { padding: '1.25rem', fontWeight: '700', fontSize: '1.125rem', color: 'var(--c1)' } }, '${opts.name}'),
-    h('nav', { style: { flex: '1', padding: '0.5rem' } },
+    div({ style: { padding: '1.25rem', fontWeight: '700', fontSize: '1.125rem', color: 'var(--c1)' } }, '${opts.name}'),
+    nav({ style: { flex: '1', padding: '0.5rem' } },
       ...navItems.map(item =>
 ${navLinkContent}
       )
     ),
-    h('div', { style: { padding: '1rem', borderTop: '1px solid var(--c5)' } },
+    div({ style: { padding: '1rem', borderTop: '1px solid var(--c5)' } },
       Button({ variant: 'ghost', block: true, onclick: () => setCollapsed(c => !c) }, 'Toggle')
     )
   );
@@ -133,25 +135,28 @@ function headerJs(opts) {
         Button({ variant: 'ghost', 'aria-label': 'Notifications' }, ${iconExpr('bell', opts)})
       ),
       Button({ variant: 'ghost', 'aria-label': 'User profile' }, ${iconExpr('user', opts)}),
-      h('span', { style: { color: 'var(--c4)', fontSize: '0.875rem' } }, 'Welcome back')`
-    : `      h('span', { style: { color: 'var(--c4)', fontSize: '0.875rem' } }, 'Welcome back')`;
+      span({ style: { color: 'var(--c4)', fontSize: '0.875rem' } }, 'Welcome back')`
+    : `      span({ style: { color: 'var(--c4)', fontSize: '0.875rem' } }, 'Welcome back')`;
 
   const headerImports = hasIcons
-    ? `import { h } from 'decantr/core';
+    ? `import { tags } from 'decantr/tags';
 import { Button, Badge } from 'decantr/components';
-${iconImport(opts)}`
-    : `import { h } from 'decantr/core';`;
+${iconImport(opts)}const { header, h1, div, span } = tags;`
+    : `import { tags } from 'decantr/tags';
+
+const { header, h1, div, span } = tags;`;
 
   return `${headerImports}
+
 export function Header({ title }) {
-  return h('header', {
+  return header({
     style: {
       padding: '1rem 1.5rem', background: 'var(--c2)', borderBottom: '1px solid var(--c5)',
       display: 'flex', alignItems: 'center', justifyContent: 'space-between'
     }
   },
-    h('h1', { style: { fontSize: '1.25rem', fontWeight: '600' } }, title),
-    h('div', { style: { display: 'flex', gap: '0.75rem', alignItems: 'center' } },
+    h1({ style: { fontSize: '1.25rem', fontWeight: '600' } }, title),
+    div({ style: { display: 'flex', gap: '0.75rem', alignItems: 'center' } },
 ${headerRight}
     )
   );
@@ -170,35 +175,37 @@ function statsCardJs(opts) {
     : '';
 
   const badgeContent = hasIcons
-    ? `      change ? h('div', { style: { display: 'flex', alignItems: 'center', gap: '0.25rem' } },
+    ? `      change ? div({ style: { display: 'flex', alignItems: 'center', gap: '0.25rem' } },
         Badge({ status: isUp ? 'success' : 'error', count: change }),
         trendIcon
       ) : null`
     : `      change ? Badge({ status: isUp ? 'success' : 'error', count: change }) : null`;
 
   const categoryIconProp = hasIcons
-    ? `\n      categoryIcon ? h('div', { style: { color: 'var(--c4)' } }, categoryIcon) : null`
+    ? `\n      categoryIcon ? div({ style: { color: 'var(--c4)' } }, categoryIcon) : null`
     : '';
 
   const fnParams = hasIcons
     ? `{ title, value, change, status, categoryIcon }`
     : `{ title, value, change, status }`;
 
-  return `import { h, text } from 'decantr/core';
+  return `import { text } from 'decantr/core';
+import { tags } from 'decantr/tags';
 import { Card, Badge } from 'decantr/components';
-${iconImport(opts)}
+${iconImport(opts)}const { div, p } = tags;
+
 export function StatsCard(${fnParams}) {
   const isUp = change && change.startsWith('+');
 ${trendIcon}
   return Card({ hoverable: true },
-    h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' } },
-      h('div', null,
-        h('p', { style: { color: 'var(--c4)', fontSize: '0.875rem', marginBottom: '0.5rem' } }, title),
-        h('p', { style: { fontSize: '1.75rem', fontWeight: '700' } },
+    div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' } },
+      div(
+        p({ style: { color: 'var(--c4)', fontSize: '0.875rem', marginBottom: '0.5rem' } }, title),
+        p({ style: { fontSize: '1.75rem', fontWeight: '700' } },
           typeof value === 'function' ? text(value) : value
         )
       ),
-      h('div', { style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' } },
+      div({ style: { display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '0.5rem' } },
 ${badgeContent},
 ${categoryIconProp}
       )
@@ -231,17 +238,18 @@ function overviewJs(opts) {
     { title: 'Conversion', value: '3.24%', change: '+0.5%', status: 'success' }
   ];`;
 
-  return `import { h } from 'decantr/core';
+  return `import { tags } from 'decantr/tags';
 import { createSignal } from 'decantr/state';
 import { StatsCard } from '../components/stats-card.js';
 import { Card } from 'decantr/components';
-${iconImport(opts)}
+${iconImport(opts)}const { div, h2, p, span } = tags;
+
 export function Overview() {
 ${statsDef}
 
-  return h('div', null,
-    h('h2', { style: { fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' } }, 'Overview'),
-    h('div', {
+  return div(
+    h2({ style: { fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' } }, 'Overview'),
+    div({
       style: {
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
         gap: '1rem', marginBottom: '1.5rem'
@@ -250,14 +258,14 @@ ${statsDef}
       ...stats.map(s => StatsCard(s))
     ),
     Card({ title: 'Recent Activity' },
-      h('p', { style: { color: 'var(--c4)' } }, 'Chart placeholder \\u2014 integrate your preferred charting library here.'),
-      h('div', {
+      p({ style: { color: 'var(--c4)' } }, 'Chart placeholder \\u2014 integrate your preferred charting library here.'),
+      div({
         style: {
           height: '200px', background: 'var(--c2)', borderRadius: '8px',
           marginTop: '1rem', display: 'flex', alignItems: 'center', justifyContent: 'center',
           border: '1px dashed var(--c5)'
         }
-      }, h('span', { style: { color: 'var(--c4)' } }, 'Chart Area'))
+      }, span({ style: { color: 'var(--c4)' } }, 'Chart Area'))
     )
   );
 }
@@ -281,10 +289,11 @@ function dataJs(opts) {
     : `                  Button({ size: 'sm' }, 'Edit'),
                   Button({ size: 'sm', variant: 'destructive' }, 'Delete')`;
 
-  return `import { h } from 'decantr/core';
+  return `import { tags } from 'decantr/tags';
 import { createSignal } from 'decantr/state';
 import { Card, Button, Badge, Input } from 'decantr/components';
-${iconImport(opts)}
+${iconImport(opts)}const { div, h2, table, thead, tbody, tr, th, td, span } = tags;
+
 const mockData = [
   { id: 1, name: 'Alice Johnson', email: 'alice@example.com', role: 'Admin', status: 'Active' },
   { id: 2, name: 'Bob Smith', email: 'bob@example.com', role: 'Editor', status: 'Active' },
@@ -299,38 +308,38 @@ export function DataPage() {
   const cellStyle = { padding: '0.75rem 1rem', borderBottom: '1px solid var(--c5)' };
   const headerStyle = { ...cellStyle, fontWeight: '600', fontSize: '0.75rem', textTransform: 'uppercase', letterSpacing: '0.05em', color: 'var(--c4)' };
 
-  return h('div', null,
-    h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' } },
-      h('h2', { style: { fontSize: '1.5rem', fontWeight: '600' } }, 'Data Table'),
-      h('div', { style: { display: 'flex', gap: '0.75rem' } },
+  return div(
+    div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' } },
+      h2({ style: { fontSize: '1.5rem', fontWeight: '600' } }, 'Data Table'),
+      div({ style: { display: 'flex', gap: '0.75rem' } },
         ${searchInput},
         ${addUserBtn}
       )
     ),
     Card({},
-      h('table', { style: { width: '100%', borderCollapse: 'collapse' } },
-        h('thead', null,
-          h('tr', null,
-            h('th', { style: headerStyle }, 'Name'),
-            h('th', { style: headerStyle }, 'Email'),
-            h('th', { style: headerStyle }, 'Role'),
-            h('th', { style: headerStyle }, 'Status'),
-            h('th', { style: headerStyle }, 'Actions')
+      table({ style: { width: '100%', borderCollapse: 'collapse' } },
+        thead(
+          tr(
+            th({ style: headerStyle }, 'Name'),
+            th({ style: headerStyle }, 'Email'),
+            th({ style: headerStyle }, 'Role'),
+            th({ style: headerStyle }, 'Status'),
+            th({ style: headerStyle }, 'Actions')
           )
         ),
-        h('tbody', null,
+        tbody(
           ...mockData.map(row =>
-            h('tr', null,
-              h('td', { style: cellStyle }, row.name),
-              h('td', { style: cellStyle }, row.email),
-              h('td', { style: cellStyle }, row.role),
-              h('td', { style: cellStyle },
+            tr(
+              td({ style: cellStyle }, row.name),
+              td({ style: cellStyle }, row.email),
+              td({ style: cellStyle }, row.role),
+              td({ style: cellStyle },
                 Badge({ status: row.status === 'Active' ? 'success' : 'warning', dot: true },
-                  h('span', null, row.status)
+                  span(row.status)
                 )
               ),
-              h('td', { style: cellStyle },
-                h('div', { style: { display: 'flex', gap: '0.5rem' } },
+              td({ style: cellStyle },
+                div({ style: { display: 'flex', gap: '0.5rem' } },
 ${actionBtns}
                 )
               )
@@ -351,10 +360,11 @@ function settingsJs(opts) {
     ? `Button({ variant: 'primary', onclick: handleSave }, ${iconExpr('save', opts)}, ' Save Changes')`
     : `Button({ variant: 'primary', onclick: handleSave }, 'Save Changes')`;
 
-  return `import { h } from 'decantr/core';
+  return `import { tags } from 'decantr/tags';
 import { createSignal } from 'decantr/state';
 import { Card, Button, Input } from 'decantr/components';
-${iconImport(opts)}
+${iconImport(opts)}const { div, h2, label } = tags;
+
 export function Settings() {
   const [name, setName] = createSignal('John Doe');
   const [email, setEmail] = createSignal('john@example.com');
@@ -368,18 +378,18 @@ export function Settings() {
   const fieldStyle = { marginBottom: '1rem' };
   const labelStyle = { display: 'block', fontSize: '0.875rem', fontWeight: '500', marginBottom: '0.375rem', color: 'var(--c3)' };
 
-  return h('div', null,
-    h('h2', { style: { fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' } }, 'Settings'),
+  return div(
+    h2({ style: { fontSize: '1.5rem', fontWeight: '600', marginBottom: '1.5rem' } }, 'Settings'),
     Card({ title: 'Profile' },
-      h('div', { style: fieldStyle },
-        h('label', { style: labelStyle }, 'Full Name'),
+      div({ style: fieldStyle },
+        label({ style: labelStyle }, 'Full Name'),
         Input({ value: name, oninput: e => setName(e.target ? e.target.value : '') })
       ),
-      h('div', { style: fieldStyle },
-        h('label', { style: labelStyle }, 'Email'),
+      div({ style: fieldStyle },
+        label({ style: labelStyle }, 'Email'),
         Input({ type: 'email', value: email, oninput: e => setEmail(e.target ? e.target.value : '') })
       ),
-      h('div', { style: { display: 'flex', gap: '0.75rem', alignItems: 'center' } },
+      div({ style: { display: 'flex', gap: '0.75rem', alignItems: 'center' } },
         ${saveBtn},
         Button({ variant: 'ghost' }, 'Cancel')
       )

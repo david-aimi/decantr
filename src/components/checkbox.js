@@ -1,6 +1,6 @@
 import { h } from '../core/index.js';
 import { createEffect } from '../state/index.js';
-import { injectBase, cx } from './_base.js';
+import { injectBase, cx, reactiveAttr } from './_base.js';
 
 /**
  * @param {Object} [props]
@@ -41,14 +41,7 @@ export function Checkbox(props = {}) {
     wrapper.classList.add('d-checkbox-checked');
   }
 
-  if (typeof disabled === 'function') {
-    createEffect(() => {
-      if (disabled()) input.setAttribute('disabled', '');
-      else input.removeAttribute('disabled');
-    });
-  } else if (disabled) {
-    input.setAttribute('disabled', '');
-  }
+  reactiveAttr(input, disabled, 'disabled');
 
   // Sync visual state on native change
   input.addEventListener('change', () => {

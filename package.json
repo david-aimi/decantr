@@ -1,6 +1,6 @@
 {
   "name": "decantr",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "AI-first web framework. Zero dependencies. Native JS/CSS/HTML.",
   "type": "module",
   "engines": {
@@ -31,25 +31,33 @@
     "./components": {
       "import": "./src/components/index.js"
     },
+    "./tags": {
+      "import": "./src/tags/index.js"
+    },
     "./blocks": {
       "import": "./src/blocks/index.js"
     },
-    "./themes": {
-      "import": "./src/css/themes.js"
+    "./kit/dashboard": {
+      "import": "./src/kit/dashboard/index.js"
     },
-    "./styles": {
-      "import": "./src/css/styles.js"
+    "./kit/auth": {
+      "import": "./src/kit/auth/index.js"
+    },
+    "./kit/content": {
+      "import": "./src/kit/content/index.js"
     }
   },
   "files": [
     "src/",
     "cli/",
-    "tools/"
+    "tools/",
+    "blueprints/"
   ],
   "scripts": {
     "test": "node --test test/**/*.test.js",
     "docs:dev": "cd docs && npx decantr dev",
-    "docs:build": "cd docs && npx decantr build"
+    "docs:build": "cd docs && npx decantr build",
+    "reset": "node tools/reset-playground.js"
   },
   "keywords": [
     "framework",

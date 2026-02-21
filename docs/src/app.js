@@ -1,12 +1,13 @@
 import { h, mount, cond } from 'decantr/core';
 import { createMemo } from 'decantr/state';
 import { createRouter } from 'decantr/router';
-import { setTheme, setStyle } from 'decantr/css';
+import { setTheme } from 'decantr/css';
 import { Sidebar } from './layout/sidebar.js';
 import { Header } from './layout/header.js';
 import { Footer } from './layout/footer.js';
 import { Navbar } from './layout/navbar.js';
 import { Home } from './pages/home.js';
+import { HowItWorks } from './pages/how-it-works.js';
 import { GettingStarted } from './pages/getting-started.js';
 import { CorePage } from './pages/core.js';
 import { StatePage } from './pages/state.js';
@@ -16,12 +17,12 @@ import { ComponentsPage } from './pages/components.js';
 import { CLIPage } from './pages/cli.js';
 
 setTheme('light');
-setStyle('flat');
 
 const router = createRouter({
   mode: 'hash',
   routes: [
     { path: '/', component: Home },
+    { path: '/how-it-works', component: HowItWorks },
     { path: '/getting-started', component: GettingStarted },
     { path: '/core', component: CorePage },
     { path: '/state', component: StatePage },
@@ -32,7 +33,10 @@ const router = createRouter({
   ]
 });
 
-const isHome = createMemo(() => router.path() === '/');
+const isLanding = createMemo(() => {
+  const p = router.path();
+  return p === '/' || p === '/how-it-works';
+});
 
 function LandingLayout() {
   return h('div', { style: { minHeight: '100vh', display: 'flex', flexDirection: 'column' } },
@@ -58,7 +62,7 @@ function DocsLayout() {
 }
 
 function App() {
-  return cond(isHome, LandingLayout, DocsLayout);
+  return cond(isLanding, LandingLayout, DocsLayout);
 }
 
 mount(document.getElementById('app'), App);

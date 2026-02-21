@@ -1,6 +1,6 @@
 import { h } from '../core/index.js';
 import { createEffect } from '../state/index.js';
-import { injectBase, cx } from './_base.js';
+import { injectBase, cx, reactiveAttr } from './_base.js';
 
 /**
  * @param {Object} [props]
@@ -33,18 +33,9 @@ export function Button(props = {}, ...children) {
 
   const el = h('button', btnProps, ...children);
 
-  // Handle reactive disabled
-  if (typeof disabled === 'function') {
-    createEffect(() => {
-      const v = disabled();
-      if (v) el.setAttribute('disabled', '');
-      else el.removeAttribute('disabled');
-    });
-  } else if (disabled) {
-    el.setAttribute('disabled', '');
-  }
+  reactiveAttr(el, disabled, 'disabled');
 
-  // Handle reactive loading
+  // Loading is complex: toggles className + disabled together
   if (typeof loading === 'function') {
     createEffect(() => {
       const v = loading();

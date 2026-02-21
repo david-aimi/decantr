@@ -3,7 +3,6 @@
   "name": "decantr-docs",
   "projectType": "dashboard",
   "theme": "light",
-  "style": "flat",
   "router": "hash",
   "dev": { "port": 3001 },
   "build": { "outDir": "dist" }

@@ -1,6 +1,6 @@
 import { h } from '../core/index.js';
 import { createEffect } from '../state/index.js';
-import { injectBase, cx } from './_base.js';
+import { injectBase, cx, reactiveAttr, reactiveClass } from './_base.js';
 
 /**
  * @param {Object} [props]
@@ -140,22 +140,8 @@ export function Select(props = {}) {
     });
   }
 
-  if (typeof disabled === 'function') {
-    createEffect(() => {
-      if (disabled()) trigger.setAttribute('disabled', '');
-      else trigger.removeAttribute('disabled');
-    });
-  } else if (disabled) {
-    trigger.setAttribute('disabled', '');
-  }
-
-  if (typeof error === 'function') {
-    createEffect(() => {
-      wrap.className = error() ? cx(wrapClass, 'd-select-error') : wrapClass;
-    });
-  } else if (error) {
-    wrap.className = cx(wrapClass, 'd-select-error');
-  }
+  reactiveAttr(trigger, disabled, 'disabled');
+  reactiveClass(wrap, error, wrapClass, 'd-select-error');
 
   return wrap;
 }

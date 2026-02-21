@@ -2,7 +2,7 @@
  * Landing page scaffold: welcome + pricing + footer.
  */
 
-import { welcomeJs, iconName, iconExpr, iconImport } from './shared.js';
+import { welcomeJs, iconName, iconExpr, iconImport, optIcon } from './shared.js';
 
 export function landingFiles(opts) {
   return [
@@ -15,18 +15,19 @@ export function landingFiles(opts) {
 }
 
 function appJs(opts) {
-  return `import { h, mount } from 'decantr/core';
+  return `import { mount } from 'decantr/core';
+import { tags } from 'decantr/tags';
 import { setTheme } from 'decantr/css';
-import { setStyle } from 'decantr/css';
 import { Welcome } from './sections/welcome.js';
 import { Pricing } from './sections/pricing.js';
 import { Footer } from './sections/footer.js';
 
+const { div } = tags;
+
 setTheme('${opts.theme}');
-setStyle('${opts.style}');
 
 function App() {
-  return h('div', null,
+  return div(
     Welcome(),
     Pricing(),
     Footer()
@@ -43,16 +44,16 @@ function pricingJs(opts) {
   const planIcons = { Starter: 'star', Pro: 'bolt', Enterprise: 'shield' };
 
   const planNameExpr = hasIcons
-    ? `              h('h3', { style: { fontSize: '1.25rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' } },
+    ? `              h3({ style: { fontSize: '1.25rem', fontWeight: '600', display: 'inline-flex', alignItems: 'center', gap: '0.5rem' } },
                   plan.planIcon, plan.name
                 )`
-    : `              h('h3', { style: { fontSize: '1.25rem', fontWeight: '600' } }, plan.name)`;
+    : `              h3({ style: { fontSize: '1.25rem', fontWeight: '600' } }, plan.name)`;
 
   const featureItem = hasIcons
-    ? `                  h('li', { style: { padding: '0.375rem 0', color: 'var(--c4)', display: 'flex', alignItems: 'center', gap: '0.5rem' } },
+    ? `                  li({ style: { padding: '0.375rem 0', color: 'var(--c4)', display: 'flex', alignItems: 'center', gap: '0.5rem' } },
                     ${iconExpr('check', opts, { size: '1em', 'aria-hidden': 'true' })}, f
                   )`
-    : `                  h('li', { style: { padding: '0.375rem 0', color: 'var(--c4)' } }, '\\u2713 ' + f)`;
+    : `                  li({ style: { padding: '0.375rem 0', color: 'var(--c4)' } }, '\\u2713 ' + f)`;
 
   const plansDef = hasIcons
     ? `const plans = [
@@ -66,20 +67,21 @@ function pricingJs(opts) {
   { name: 'Enterprise', price: 'Custom', features: ['Everything in Pro', 'Dedicated support', 'SLA guarantee', 'Custom integrations'], cta: 'Contact Sales' }
 ];`;
 
-  return `import { h } from 'decantr/core';
+  return `import { tags } from 'decantr/tags';
 import { Card, Button, Badge } from 'decantr/components';
-${iconImport(opts)}
+${iconImport(opts)}const { section, div, h2, h3, p, ul, li } = tags;
+
 ${plansDef}
 
 export function Pricing() {
-  return h('section', {
+  return section({
     style: { padding: '5rem 2rem', background: 'var(--c2)', borderTop: '1px solid var(--c5)', borderBottom: '1px solid var(--c5)' }
   },
-    h('div', { style: { maxWidth: '1080px', margin: '0 auto' } },
-      h('h2', { style: { fontSize: '2rem', fontWeight: '700', textAlign: 'center', marginBottom: '3rem' } },
+    div({ style: { maxWidth: '1080px', margin: '0 auto' } },
+      h2({ style: { fontSize: '2rem', fontWeight: '700', textAlign: 'center', marginBottom: '3rem' } },
         'Simple pricing'
       ),
-      h('div', {
+      div({
         style: {
           display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
           gap: '1.5rem', alignItems: 'start'
@@ -88,14 +90,14 @@ export function Pricing() {
         ...plans.map(plan => {
           const card = Card({},
             Card.Header({},
-              h('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
+              div({ style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
 ${planNameExpr},
                 plan.popular ? Badge({ status: 'success', count: 'Popular' }) : null
               )
             ),
             Card.Body({},
-              h('p', { style: { fontSize: '2.5rem', fontWeight: '800', marginBottom: '1.5rem' } }, plan.price),
-              h('ul', { style: { listStyle: 'none', padding: '0', marginBottom: '1.5rem' } },
+              p({ style: { fontSize: '2.5rem', fontWeight: '800', marginBottom: '1.5rem' } }, plan.price),
+              ul({ style: { listStyle: 'none', padding: '0', marginBottom: '1.5rem' } },
                 ...plan.features.map(f =>
 ${featureItem}
                 )
@@ -116,20 +118,21 @@ function footerJs(opts) {
   const hasIcons = !!opts.icons;
 
   const footerBottom = hasIcons
-    ? `    h('div', {
+    ? `    div({
       style: { maxWidth: '1080px', margin: '2rem auto 0', paddingTop: '1.5rem', borderTop: '1px solid var(--c5)', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '1rem' }
     },
-      h('a', { href: 'https://github.com/decantr-ai/decantr', target: '_blank', 'aria-label': 'Source code', style: { color: 'var(--c4)' } },
+      a({ href: 'https://github.com/decantr-ai/decantr', target: '_blank', 'aria-label': 'Source code', style: { color: 'var(--c4)' } },
         ${iconExpr('code', opts, { size: '1.25em', 'aria-hidden': 'true' })}
       ),
-      h('span', { style: { color: 'var(--c4)', fontSize: '0.875rem' } }, '\\u00a9 2025 decantr. All rights reserved.')
+      span({ style: { color: 'var(--c4)', fontSize: '0.875rem' } }, '\\u00a9 2025 decantr. All rights reserved.')
     )`
-    : `    h('div', {
+    : `    div({
       style: { maxWidth: '1080px', margin: '2rem auto 0', paddingTop: '1.5rem', borderTop: '1px solid var(--c5)', textAlign: 'center', color: 'var(--c4)', fontSize: '0.875rem' }
     }, '\\u00a9 2025 decantr. All rights reserved.')`;
 
-  return `import { h } from 'decantr/core';
-${iconImport(opts)}
+  return `import { tags } from 'decantr/tags';
+${iconImport(opts)}const { footer, div, p, a, span } = tags;
+
 const links = {
   Product: ['Features', 'Pricing', 'Docs', 'Changelog'],
   Company: ['About', 'Blog', 'Careers', 'Contact'],
@@ -137,25 +140,25 @@ const links = {
 };
 
 export function Footer() {
-  return h('footer', {
+  return footer({
     style: { padding: '3rem 2rem', borderTop: '1px solid var(--c5)' }
   },
-    h('div', {
+    div({
       style: {
         maxWidth: '1080px', margin: '0 auto',
         display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
         gap: '2rem'
       }
     },
-      h('div', null,
-        h('p', { style: { fontWeight: '700', color: 'var(--c1)', marginBottom: '0.5rem' } }, '${opts.name}'),
-        h('p', { style: { color: 'var(--c4)', fontSize: '0.875rem' } }, 'Built with decantr.')
+      div(
+        p({ style: { fontWeight: '700', color: 'var(--c1)', marginBottom: '0.5rem' } }, '${opts.name}'),
+        p({ style: { color: 'var(--c4)', fontSize: '0.875rem' } }, 'Built with decantr.')
       ),
       ...Object.entries(links).map(([category, items]) =>
-        h('div', null,
-          h('p', { style: { fontWeight: '600', marginBottom: '0.75rem', fontSize: '0.875rem' } }, category),
+        div(
+          p({ style: { fontWeight: '600', marginBottom: '0.75rem', fontSize: '0.875rem' } }, category),
           ...items.map(item =>
-            h('a', { href: '#', style: { display: 'block', color: 'var(--c4)', fontSize: '0.875rem', padding: '0.25rem 0' } }, item)
+            a({ href: '#', style: { display: 'block', color: 'var(--c4)', fontSize: '0.875rem', padding: '0.25rem 0' } }, item)
           )
         )
       )

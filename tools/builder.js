@@ -10,8 +10,8 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const frameworkSrc = resolve(__dirname, '..', 'src');
 
 const BUILD_IMPORT_MAP = {
-  'themes': 'css/themes.js',
-  'styles': 'css/styles.js'
+  'themes': 'css/theme-registry.js',
+  'styles': 'css/theme-registry.js'
 };
 
 function resolveDecantrImport(subpath) {
@@ -36,9 +36,9 @@ function findImports(source, baseDir) {
     const specifier = match[1];
     if (specifier.startsWith('decantr')) {
       const subpath = specifier.replace('decantr/', '').replace('decantr', 'core');
-      imports.push(resolveDecantrImport(subpath));
+      imports.push({ resolved: resolveDecantrImport(subpath), specifier });
     } else if (specifier.startsWith('./') || specifier.startsWith('../')) {
-      imports.push(resolve(baseDir, specifier));
+      imports.push({ resolved: resolve(baseDir, specifier), specifier });
     }
   }
   return imports;
@@ -51,11 +51,11 @@ function findImports(source, baseDir) {
 async function resolveModules(entrypoint) {
   /** @type {Map<string, string>} */
   const modules = new Map();
-  const queue = [resolve(entrypoint)];
+  const queue = [{ resolved: resolve(entrypoint), specifier: entrypoint, from: null }];
   const visited = new Set();
 
   while (queue.length > 0) {
-    const filePath = queue.shift();
+    const { resolved: filePath, specifier, from: fromFile } = queue.shift();
     if (visited.has(filePath)) continue;
     visited.add(filePath);
 
@@ -63,9 +63,15 @@ async function resolveModules(entrypoint) {
       const source = await readFile(filePath, 'utf-8');
       modules.set(filePath, source);
       const imports = findImports(source, dirname(filePath));
-      queue.push(...imports);
+      queue.push(...imports.map(imp => ({ ...imp, from: filePath })));
     } catch (e) {
-      console.warn(`  [warn] Could not resolve: ${filePath}`);
+      const fromRel = fromFile ? relative(process.cwd(), fromFile) : 'entrypoint';
+      if (specifier && specifier.startsWith('decantr')) {
+        console.error(`  [error] Could not resolve import '${specifier}' from ${fromRel}`);
+        console.error(`    Available modules: decantr/core, decantr/state, decantr/router, decantr/css, decantr/tags, decantr/components, decantr/blocks, decantr/test`);
+      } else {
+        console.error(`  [error] Could not resolve '${specifier || filePath}' from ${fromRel}`);
+      }
     }
   }
 
@@ -92,6 +98,13 @@ function bundle(modules, entrypoint) {
   for (const [path, source] of moduleList) {
     const id = moduleIds.get(path);
     let processed = source;
+
+    // Stash template literal contents to protect them from import/export rewriting
+    const stash = [];
+    processed = processed.replace(/`(?:[^`\\]|\\.)*`/gs, (m) => {
+      stash.push(m);
+      return `\`__TPL_${stash.length - 1}__\``;
+    });
 
     // Rewrite re-exports: export { X, Y } from 'module' → const { X, Y } = _mN;
     processed = processed.replace(
@@ -181,6 +194,9 @@ function bundle(modules, entrypoint) {
         exportedNames.push((name[1] || name[0]).trim());
       });
     }
+
+    // Restore stashed template literals
+    processed = processed.replace(/`__TPL_(\d+)__`/g, (_, i) => stash[i]);
 
     output += `// ${relative(process.cwd(), path)}\n`;
     output += `const ${id} = (function(){\n${processed}\nreturn {${exportedNames.join(',')}};\n})();\n\n`;

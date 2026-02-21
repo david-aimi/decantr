@@ -1,0 +1,432 @@
+#!/usr/bin/env node
+/**
+ * Auto-generates src/registry/ from JSDoc annotations across all source files.
+ * Run: node tools/registry.js
+ */
+import { readFileSync, writeFileSync, readdirSync, mkdirSync, existsSync, unlinkSync } from 'node:fs';
+import { join, dirname } from 'node:path';
+import { fileURLToPath } from 'node:url';
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const root = join(__dirname, '..');
+const src = join(root, 'src');
+
+function readFile(path) {
+  return readFileSync(path, 'utf-8');
+}
+
+// --- JSDoc parser ---
+
+/**
+ * Extract JSDoc blocks paired with their export function declarations.
+ * Two-pass: find export functions, then look backwards for the nearest JSDoc block.
+ */
+function extractFunctions(source) {
+  const results = [];
+  const funcRe = /export\s+function\s+(\w+)/g;
+  let m;
+  while ((m = funcRe.exec(source)) !== null) {
+    // Look backwards from the export function for the nearest JSDoc end
+    const before = source.slice(0, m.index);
+    const lastClose = before.lastIndexOf('*/');
+    if (lastClose === -1) continue;
+
+    // Find the matching opening /**
+    const chunk = before.slice(0, lastClose + 2);
+    const lastOpen = chunk.lastIndexOf('/**');
+    if (lastOpen === -1) continue;
+
+    // Verify only whitespace between JSDoc end and export function
+    const gap = before.slice(lastClose + 2);
+    if (gap.trim() !== '') continue;
+
+    results.push({ name: m[1], jsdoc: chunk.slice(lastOpen) });
+  }
+  return results;
+}
+
+/**
+ * Extract a brace-balanced type from a string starting at the opening {.
+ * Returns { type, endIndex } or null.
+ */
+function extractBracedType(str, startIndex) {
+  if (str[startIndex] !== '{') return null;
+  let depth = 0;
+  for (let i = startIndex; i < str.length; i++) {
+    if (str[i] === '{') depth++;
+    else if (str[i] === '}') { depth--; if (depth === 0) return { type: str.slice(startIndex + 1, i).trim(), endIndex: i }; }
+  }
+  return null;
+}
+
+/**
+ * Parse a single JSDoc block into structured param/returns data.
+ */
+function parseJSDoc(jsdoc) {
+  const params = [];
+  let returns = null;
+  let description = null;
+
+  // Extract description: lines after /** that don't start with @tag
+  const lines = jsdoc.split('\n').map(l => l.replace(/^\s*\*?\s?/, '').trim()).filter(Boolean);
+  const descLines = [];
+  for (const line of lines) {
+    if (line.startsWith('/**') || line === '*/') continue;
+    if (line.startsWith('@')) break;
+    if (line && !line.startsWith('*')) descLines.push(line);
+  }
+  description = descLines.join(' ').trim() || null;
+
+  // Extract @param tags with brace-balanced type extraction
+  const tagRe = /@param\s*/g;
+  let tm;
+  while ((tm = tagRe.exec(jsdoc)) !== null) {
+    const afterTag = jsdoc.slice(tm.index + tm[0].length);
+    const braceIdx = afterTag.indexOf('{');
+    if (braceIdx === -1 || braceIdx > 2) continue;
+
+    const extracted = extractBracedType(afterTag, braceIdx);
+    if (!extracted) continue;
+
+    const type = extracted.type;
+    const rest = afterTag.slice(extracted.endIndex + 1).trimStart();
+
+    // Parse name: optional [name] or required name
+    const nameMatch = rest.match(/^(\[?)([^\]\s,\-]+)\]?\s*(?:-\s*(.*))?/);
+    if (!nameMatch) continue;
+
+    const optional = nameMatch[1] === '[';
+    const name = nameMatch[2].trim();
+    const desc = nameMatch[3] ? nameMatch[3].trim() : null;
+
+    const param = { name, type, optional };
+
+    // Extract enum values from description: word|word|word
+    if (desc) {
+      const enumMatch = desc.match(/^([a-z][\w'-]*(?:\|[a-z][\w'-]*)+)/);
+      if (enumMatch) {
+        param.enum = enumMatch[1].split('|');
+      }
+      const defMatch = desc.match(/\(default:\s*([^)]+)\)/);
+      if (defMatch) {
+        param.default = defMatch[1].trim();
+      }
+      if (type.includes('Function') && type !== 'Function') {
+        param.reactive = true;
+      }
+      param.description = desc;
+    } else if (type.includes('Function') && type !== 'Function') {
+      param.reactive = true;
+    }
+
+    params.push(param);
+  }
+
+  // Extract @returns with brace-balanced type
+  const retIdx = jsdoc.search(/@returns?\s*\{/);
+  if (retIdx !== -1) {
+    const afterRet = jsdoc.slice(retIdx);
+    const braceStart = afterRet.indexOf('{');
+    if (braceStart !== -1) {
+      const extracted = extractBracedType(afterRet, braceStart);
+      if (extracted) returns = extracted.type;
+    }
+  }
+
+  return { params, returns, description };
+}
+
+/**
+ * For component functions: separate props.* params from top-level params.
+ */
+function buildComponentEntry(parsed) {
+  const entry = {};
+  const props = {};
+  let hasChildren = false;
+  let childrenType = null;
+
+  for (const p of parsed.params) {
+    // Skip the root props object param
+    if (p.name === 'props' && (p.type === 'Object' || p.type.startsWith('{'))) continue;
+
+    if (p.name.startsWith('props.')) {
+      const propName = p.name.slice(6);
+      const prop = { type: p.type };
+      if (p.enum) prop.enum = p.enum;
+      if (p.default) prop.default = p.default;
+      if (p.reactive) prop.reactive = true;
+      if (!p.optional) prop.required = true;
+      props[propName] = prop;
+    } else if (p.name === 'children') {
+      hasChildren = true;
+      childrenType = p.type;
+    }
+  }
+
+  if (Object.keys(props).length > 0) entry.props = props;
+  if (hasChildren) entry.children = childrenType || true;
+  if (parsed.returns) entry.returns = parsed.returns;
+
+  return entry;
+}
+
+/**
+ * For non-component functions: list params directly.
+ */
+function buildFunctionEntry(parsed) {
+  const entry = {};
+  const params = [];
+
+  for (const p of parsed.params) {
+    const param = { name: p.name, type: p.type };
+    if (p.optional) param.optional = true;
+    if (p.enum) param.enum = p.enum;
+    if (p.default) param.default = p.default;
+    if (p.description) param.description = p.description;
+    params.push(param);
+  }
+
+  if (params.length > 0) entry.params = params;
+  if (parsed.returns) entry.returns = parsed.returns;
+  if (parsed.description) entry.description = parsed.description;
+
+  return entry;
+}
+
+// --- Module scanners ---
+
+function scanComponents() {
+  const dir = join(src, 'components');
+  const files = readdirSync(dir).filter(f => f.endsWith('.js') && !f.startsWith('_'));
+  const components = {};
+
+  for (const file of files) {
+    const source = readFile(join(dir, file));
+    const fns = extractFunctions(source);
+
+    for (const fn of fns) {
+      // Skip internal helpers like resetToasts
+      if (fn.name === 'resetToasts') continue;
+
+      const parsed = parseJSDoc(fn.jsdoc);
+
+      // icon() and toast() are functions, not prop-based components
+      if (fn.name === 'icon' || fn.name === 'toast') {
+        components[fn.name] = buildFunctionEntry(parsed);
+        components[fn.name]._type = 'function';
+      } else {
+        components[fn.name] = buildComponentEntry(parsed);
+      }
+    }
+
+    // Scan for static methods like Card.Header
+    const staticRe = /\/\*\*[\s\S]*?\*\/\s*\n\s*(\w+)\.(\w+)\s*=\s*function/g;
+    let sm;
+    while ((sm = staticRe.exec(source)) !== null) {
+      const parentName = sm[1];
+      const methodName = sm[2];
+      const jsdocMatch = source.substring(0, sm.index).match(/(\/\*\*[\s\S]*?\*\/)\s*$/);
+      // Sub-components are simple wrappers — note their existence
+      if (components[parentName]) {
+        if (!components[parentName].subComponents) components[parentName].subComponents = [];
+        components[parentName].subComponents.push(methodName);
+      }
+    }
+  }
+
+  return components;
+}
+
+function scanCore() {
+  const source = readFile(join(src, 'core', 'index.js'));
+  const lifecycle = readFile(join(src, 'core', 'lifecycle.js'));
+  const functions = {};
+
+  for (const fn of extractFunctions(source)) {
+    functions[fn.name] = buildFunctionEntry(parseJSDoc(fn.jsdoc));
+  }
+
+  // Add lifecycle exports
+  for (const fn of extractFunctions(lifecycle)) {
+    if (fn.name === 'onMount' || fn.name === 'onDestroy') {
+      functions[fn.name] = buildFunctionEntry(parseJSDoc(fn.jsdoc));
+    }
+  }
+
+  return functions;
+}
+
+function scanState() {
+  const source = readFile(join(src, 'state', 'index.js'));
+  const scheduler = readFile(join(src, 'state', 'scheduler.js'));
+  const functions = {};
+
+  for (const fn of extractFunctions(source)) {
+    functions[fn.name] = buildFunctionEntry(parseJSDoc(fn.jsdoc));
+  }
+
+  // batch is exported from scheduler
+  for (const fn of extractFunctions(scheduler)) {
+    if (fn.name === 'batch') {
+      functions[fn.name] = buildFunctionEntry(parseJSDoc(fn.jsdoc));
+    }
+  }
+
+  return functions;
+}
+
+function scanRouter() {
+  const source = readFile(join(src, 'router', 'index.js'));
+  const functions = {};
+
+  for (const fn of extractFunctions(source)) {
+    // compileRoute is internal, skip it
+    if (fn.name === 'compileRoute') continue;
+    functions[fn.name] = buildFunctionEntry(parseJSDoc(fn.jsdoc));
+  }
+
+  return functions;
+}
+
+function scanCSS() {
+  const indexSource = readFile(join(src, 'css', 'index.js'));
+  const registrySource = readFile(join(src, 'css', 'theme-registry.js'));
+  const functions = {};
+
+  for (const fn of extractFunctions(indexSource)) {
+    functions[fn.name] = buildFunctionEntry(parseJSDoc(fn.jsdoc));
+  }
+
+  for (const fn of extractFunctions(registrySource)) {
+    // Skip deprecated and internal functions
+    if (fn.jsdoc.includes('@deprecated')) continue;
+    if (fn.name.startsWith('_') || fn.name === 'buildCSS') continue;
+    functions[fn.name] = buildFunctionEntry(parseJSDoc(fn.jsdoc));
+  }
+
+  return functions;
+}
+
+// --- Kit scanner ---
+
+function scanKits() {
+  const kitDir = join(src, 'kit');
+  const kits = {};
+  const kitDirs = readdirSync(kitDir).filter(d => {
+    try { return readdirSync(join(kitDir, d)).includes('index.js'); } catch { return false; }
+  });
+
+  for (const kitName of kitDirs) {
+    const dir = join(kitDir, kitName);
+    const files = readdirSync(dir).filter(f => f.endsWith('.js') && f !== 'index.js');
+    const components = {};
+
+    for (const file of files) {
+      const source = readFile(join(dir, file));
+      const fns = extractFunctions(source);
+      for (const fn of fns) {
+        const parsed = parseJSDoc(fn.jsdoc);
+        components[fn.name] = buildComponentEntry(parsed);
+      }
+    }
+
+    kits[kitName] = {
+      description: `${kitName} domain kit`,
+      components
+    };
+  }
+
+  return kits;
+}
+
+// --- Build registry ---
+
+const generated = new Date().toISOString().split('T')[0];
+const outDir = join(src, 'registry');
+mkdirSync(outDir, { recursive: true });
+
+// Remove old monolithic registry if it exists
+const oldPath = join(src, 'registry.json');
+if (existsSync(oldPath)) unlinkSync(oldPath);
+
+// Scan all modules
+const modules = {
+  core: { description: 'DOM engine — hyperscript rendering, conditional, list, mount, lifecycle', functions: scanCore() },
+  state: { description: 'Reactive primitives — signals, effects, memos, stores, batch', functions: scanState() },
+  router: { description: 'Client-side routing — hash or history mode', functions: scanRouter() },
+  css: { description: 'Atomic CSS engine + theme management', functions: scanCSS() },
+  components: { description: 'UI components — all return HTMLElement, all accept inline styles', components: scanComponents() },
+};
+
+// Scan kits
+const kits = scanKits();
+for (const [kitName, kitData] of Object.entries(kits)) {
+  modules[`kit/${kitName}`] = {
+    description: kitData.description,
+    components: kitData.components
+  };
+}
+
+function writeJSON(filePath, data) {
+  writeFileSync(filePath, JSON.stringify(data, null, 2) + '\n');
+}
+
+// Write per-module detail files
+for (const [name, data] of Object.entries(modules)) {
+  const exportKey = data.functions ? 'functions' : 'components';
+  const fileName = name.includes('/') ? name.replace('/', '-') : name;
+  writeJSON(join(outDir, `${fileName}.json`), {
+    module: `decantr/${name}`,
+    description: data.description,
+    [exportKey]: data[exportKey]
+  });
+}
+
+// Write index with summaries + export counts
+const index = {
+  $schema: 'https://decantr.ai/schemas/registry.v1.json',
+  version: '0.3.0',
+  generated,
+  modules: {}
+};
+
+for (const [name, data] of Object.entries(modules)) {
+  const exportKey = data.functions ? 'functions' : 'components';
+  index.modules[`decantr/${name}`] = {
+    description: data.description,
+    file: `${name}.json`,
+    exports: Object.keys(data[exportKey]).length
+  };
+}
+
+index.modules['decantr/tags'] = {
+  description: 'Proxy-based tag functions for concise markup',
+  usage: 'import { tags } from \'decantr/tags\'; const { div, p } = tags; div({ class: \'card\' }, p(\'Content\'))'
+};
+
+// Add kit entries to summary
+for (const [kitName, kitData] of Object.entries(kits)) {
+  index.modules[`decantr/kit/${kitName}`] = {
+    description: kitData.description,
+    file: `kit-${kitName}.json`,
+    exports: Object.keys(kitData.components).length
+  };
+}
+
+writeJSON(join(outDir, 'index.json'), index);
+
+// Summary
+const counts = Object.entries(modules).map(([name, data]) => {
+  const exportKey = data.functions ? 'functions' : 'components';
+  return [name, Object.keys(data[exportKey]).length];
+});
+const total = counts.reduce((sum, [, n]) => sum + n, 0);
+
+console.log(`Registry generated: src/registry/ (${counts.length + 1} files)`);
+for (const [name, count] of counts) {
+  const type = name.startsWith('kit/') || name === 'components' ? 'components' : 'functions';
+  const pad = Math.max(1, 20 - name.length);
+  console.log(`  decantr/${name}:${' '.repeat(pad)}${count} ${type}`);
+}
+console.log(`  decantr/tags:${' '.repeat(15)}proxy (any HTML tag)`);
+console.log(`  Total: ${total} exports`);

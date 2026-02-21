@@ -5,6 +5,13 @@
 export function minify(source) {
   let result = source;
 
+  // Stash template literals to protect multi-line content from minification
+  const stash = [];
+  result = result.replace(/`(?:[^`\\]|\\.)*`/gs, (m) => {
+    stash.push(m);
+    return `\`__MTPL_${stash.length - 1}__\``;
+  });
+
   // Remove JSDoc and multi-line comments
   result = result.replace(/\/\*\*[\s\S]*?\*\//g, '');
   result = result.replace(/\/\*[\s\S]*?\*\//g, '');
@@ -81,6 +88,9 @@ export function minify(source) {
     }
     output += line;
   }
+
+  // Restore stashed template literals
+  output = output.replace(/`__MTPL_(\d+)__`/g, (_, i) => stash[i]);
 
   return output;
 }

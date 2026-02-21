@@ -341,6 +341,118 @@ describe('icon', () => {
     const el = icon('check', { class: 'my-icon' });
     assert.ok(el.className.includes('my-icon'));
   });
+
+  it('forwards extra opts on fallback span', () => {
+    const el = icon('star', { 'aria-hidden': 'true', 'aria-label': 'Star' });
+    assert.equal(el.getAttribute('aria-hidden'), 'true');
+    assert.equal(el.getAttribute('aria-label'), 'Star');
+  });
+
+  it('forwards extra opts on Material Icons span', () => {
+    const indicator = document.createElement('link');
+    indicator.setAttribute('data-icons', 'material');
+    document.head.appendChild(indicator);
+    const el = icon('home', { 'aria-hidden': 'true' });
+    assert.equal(el.getAttribute('aria-hidden'), 'true');
+    assert.ok(el.className.includes('material-icons'));
+  });
+
+  it('creates SVG directly from lucide.icons data', () => {
+    window.lucide = {
+      icons: {
+        Home: ['svg', {
+          xmlns: 'http://www.w3.org/2000/svg', width: '24', height: '24',
+          viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor', 'stroke-width': '2'
+        }, [
+          ['path', { d: 'M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8' }],
+          ['path', { d: 'M3 10a2 2 0 0 1 .709-1.528l7-5.999a2 2 0 0 1 2.582 0l7 5.999A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z' }]
+        ]]
+      }
+    };
+    const el = icon('home');
+    assert.equal(el.tagName, 'SVG');
+    assert.equal(el.getAttribute('stroke'), 'currentColor');
+    assert.equal(el.children.length, 2);
+    assert.equal(el.children[0].tagName, 'PATH');
+    delete window.lucide;
+  });
+
+  it('converts kebab-case to PascalCase for lucide lookup', () => {
+    window.lucide = {
+      icons: {
+        LayoutDashboard: ['svg', {
+          xmlns: 'http://www.w3.org/2000/svg', width: '24', height: '24',
+          viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor'
+        }, [
+          ['rect', { width: '7', height: '9', x: '3', y: '3', rx: '1' }]
+        ]]
+      }
+    };
+    const el = icon('layout-dashboard');
+    assert.equal(el.tagName, 'SVG');
+    assert.equal(el.children.length, 1);
+    assert.equal(el.children[0].tagName, 'RECT');
+    delete window.lucide;
+  });
+
+  it('sets size and class on lucide SVG', () => {
+    window.lucide = {
+      icons: {
+        Home: ['svg', {
+          xmlns: 'http://www.w3.org/2000/svg', width: '24', height: '24',
+          viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor'
+        }, []]
+      }
+    };
+    const el = icon('home', { size: '2rem', class: 'my-svg' });
+    assert.equal(el.getAttribute('width'), '2rem');
+    assert.equal(el.getAttribute('height'), '2rem');
+    assert.equal(el.getAttribute('class'), 'my-svg');
+    delete window.lucide;
+  });
+
+  it('forwards extra opts on lucide SVG', () => {
+    window.lucide = {
+      icons: {
+        Home: ['svg', {
+          xmlns: 'http://www.w3.org/2000/svg', width: '24', height: '24',
+          viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor'
+        }, []]
+      }
+    };
+    const el = icon('home', { 'aria-hidden': 'true', 'aria-label': 'Home icon' });
+    assert.equal(el.getAttribute('aria-hidden'), 'true');
+    assert.equal(el.getAttribute('aria-label'), 'Home icon');
+    delete window.lucide;
+  });
+
+  it('renders pending placeholder when lucide tag exists but not loaded', () => {
+    const script = document.createElement('script');
+    script.setAttribute('data-icons', 'lucide');
+    document.head.appendChild(script);
+    // No window.lucide set
+    delete window.lucide;
+    const el = icon('home');
+    assert.equal(el.tagName, 'SPAN');
+    assert.equal(el.getAttribute('data-lucide-pending'), 'home');
+    assert.equal(el.getAttribute('title'), 'home');
+  });
+
+  it('falls through to fallback for unknown lucide icon name', () => {
+    window.lucide = {
+      icons: {
+        Home: ['svg', {
+          xmlns: 'http://www.w3.org/2000/svg', width: '24', height: '24',
+          viewBox: '0 0 24 24', fill: 'none', stroke: 'currentColor'
+        }, []]
+      }
+    };
+    const el = icon('nonexistent-icon');
+    // Not in lucide.icons, no [data-icons="lucide"] tag, should be fallback span
+    assert.equal(el.tagName, 'SPAN');
+    assert.equal(el.getAttribute('title'), 'nonexistent-icon');
+    delete window.lucide;
+  });
 });
 
 describe('Textarea', () => {

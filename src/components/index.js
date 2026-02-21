@@ -18,4 +18,5 @@ export { Skeleton } from './skeleton.js';
 export { Tooltip } from './tooltip.js';
 export { Alert } from './alert.js';
 export { toast, resetToasts } from './toast.js';
+export { Chip } from './chip.js';
 export { icon } from './icon.js';

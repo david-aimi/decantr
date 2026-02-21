@@ -1,0 +1,95 @@
+{
+  "module": "decantr/core",
+  "description": "DOM engine — hyperscript rendering, conditional, list, mount, lifecycle",
+  "functions": {
+    "h": {
+      "params": [
+        {
+          "name": "tag",
+          "type": "string"
+        },
+        {
+          "name": "props",
+          "type": "Object|null"
+        },
+        {
+          "name": "children",
+          "type": "...(string|number|Node|Function)"
+        }
+      ],
+      "returns": "HTMLElement"
+    },
+    "text": {
+      "params": [
+        {
+          "name": "getter",
+          "type": "Function"
+        }
+      ],
+      "returns": "Text"
+    },
+    "cond": {
+      "params": [
+        {
+          "name": "condition",
+          "type": "Function"
+        },
+        {
+          "name": "thenFn",
+          "type": "Function"
+        },
+        {
+          "name": "elseFn",
+          "type": "Function",
+          "optional": true
+        }
+      ],
+      "returns": "HTMLElement"
+    },
+    "list": {
+      "params": [
+        {
+          "name": "itemsGetter",
+          "type": "Function"
+        },
+        {
+          "name": "keyFn",
+          "type": "Function"
+        },
+        {
+          "name": "renderFn",
+          "type": "Function"
+        }
+      ],
+      "returns": "HTMLElement"
+    },
+    "mount": {
+      "params": [
+        {
+          "name": "root",
+          "type": "HTMLElement"
+        },
+        {
+          "name": "component",
+          "type": "Function"
+        }
+      ]
+    },
+    "onMount": {
+      "params": [
+        {
+          "name": "fn",
+          "type": "Function"
+        }
+      ]
+    },
+    "onDestroy": {
+      "params": [
+        {
+          "name": "fn",
+          "type": "Function"
+        }
+      ]
+    }
+  }
+}

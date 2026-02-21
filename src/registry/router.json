@@ -1,0 +1,38 @@
+{
+  "module": "decantr/router",
+  "description": "Client-side routing — hash or history mode",
+  "functions": {
+    "createRouter": {
+      "params": [
+        {
+          "name": "config",
+          "type": "{ mode: 'hash'|'history', routes: Array<{path: string, component: Function}> }"
+        }
+      ]
+    },
+    "link": {
+      "params": [
+        {
+          "name": "props",
+          "type": "{ href: string, class?: string }"
+        },
+        {
+          "name": "children",
+          "type": "...any"
+        }
+      ],
+      "returns": "HTMLAnchorElement"
+    },
+    "navigate": {
+      "params": [
+        {
+          "name": "path",
+          "type": "string"
+        }
+      ]
+    },
+    "useRoute": {
+      "returns": "() => { path: string, params: Object, component: Function|null, matched: boolean }"
+    }
+  }
+}
